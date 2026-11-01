@@ -1712,58 +1712,38 @@ function retryUntilSuccess(fn, label = '', intervalMs = 2000) {
 }
 
     // ========== جلب بيانات الشركة (JSONP) ==========
-  function fetchCompanyDataJSONP(silent = false) {
-    return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_company_' + Math.round(100000 * Math.random());
+  async function fetchCompanyDataJSONP(silent = false) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000); // مهلة أطول للهاتف
 
-        window[callbackName] = function(response) {
-            delete window[callbackName];
-            const script = document.querySelector(`script[src*="${callbackName}"]`);
-            if (script) script.remove();
+    try {
+        const res = await fetch(`${COMPANY_API_URL}?action=getFirstCompany&_t=${Date.now()}`, {
+            signal: controller.signal
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
 
-            if (!response || !response.company) {
-                if (!silent) updateUIWithCompanyData(companyData);
-                reject(new Error('لا توجد بيانات'));
-                return;
-            }
+        const response = await res.json();
+        if (!response || !response.company) throw new Error('لا توجد بيانات');
 
-            const comp = response.company;
-
-companyData = {
-    name: comp.CompName || 'متجر المنتجات',
-    phone: comp.CompWhats || '',
-    location: comp.CompPlace || comp.CoompLocation || '',
-    logo: comp.CompLogo || '',
-    linkLoc: comp.CompanyLocationLink || comp.CompanyLocationLinkComp || '',
-    compLemit: parseFloat(comp.CompDelivaryPrice) || 0
-};
-
-            updateUIWithCompanyData(companyData);
-            resolve(companyData);
+        const comp = response.company;
+        companyData = {
+            name: comp.CompName || 'متجر المنتجات',
+            phone: comp.CompWhats || '',
+            location: comp.CompPlace || comp.CoompLocation || '',
+            logo: comp.CompLogo || '',
+            linkLoc: comp.CompanyLocationLink || comp.CompanyLocationLinkComp || '',
+            compLemit: parseFloat(comp.CompDelivaryPrice) || 0
         };
 
-        const script = document.createElement('script');
-        script.src = COMPANY_API_URL + '?action=getFirstCompany&callback=' + callbackName;
-        script.async = true;
-        script.onerror = function() {
-            delete window[callbackName];
-            if (script.parentNode) script.remove();
-            console.error('❌ فشل تحميل بيانات الشركة');
-            if (!silent) updateUIWithCompanyData(companyData);
-            reject(new Error('خطأ في الاتصال'));
-        };
-        document.body.appendChild(script);
-
-        setTimeout(() => {
-            if (window[callbackName]) {
-                delete window[callbackName];
-                if (script.parentNode) script.remove();
-                console.warn('⏱️ انتهت مهلة جلب الشركة');
-                if (!silent) updateUIWithCompanyData(companyData);
-                reject(new Error('انتهت المهلة'));
-            }
-        }, 8000);
-    });
+        updateUIWithCompanyData(companyData);
+        return companyData;
+    } catch (err) {
+        console.error('❌ فشل جلب بيانات الشركة:', err);
+        if (!silent) updateUIWithCompanyData(companyData);
+        throw err;
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 
@@ -3315,5 +3295,4 @@ function applyGridCols(cols) {
 </script>
 </body>
 </html>
-
 
