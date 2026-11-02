@@ -573,7 +573,34 @@
         .row-flash-add { animation: fullRowFlashAdd 1.5s ease-in-out !important; }
         .row-flash-edit { animation: fullRowFlashEdit 1.5s ease-in-out !important; }
         #productInputRow { position: relative; z-index: 5; }
-
+/* تنسيق جدول الفواتير بنفس نمط المنتجات */
+#bills .table-responsive-wrapper {
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+#bills .table-responsive-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #1e2a5a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+#bills .summary-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-top: 0;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+}
+@media (max-width: 576px) {
+    #bills .table-responsive-wrapper { max-height: calc(100vh - 380px); }
+}
         /* ===== نافذة الطلبات ===== */
         #orders.tab-pane {
             height: calc(100vh - 130px);
@@ -710,21 +737,19 @@
                 <div class="user-badge">
                     <i class="fas fa-user"></i>
                     <span id="navUserName">المستخدم</span>
-                    <button class="nav-btn logout-btn-nav" onclick="logout()" style="background:rgba(231, 76, 60, 0.3); border:1px solid rgba(231, 76, 60, 0.3); padding:4px 12px; border-radius:8px; color:white; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; gap:4px; margin-right:10px;">
-                        <i class="fas fa-sign-out-alt"></i> خروج
-                    </button>
+           
                     <span id="connectionStatus" class="status-badge disconnected"><i class="fas fa-circle"></i></span>
                 </div>
                 <div class="nav-actions" id="navActions"></div>
             </div>
 
             <!-- التبويبات -->
-            <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
-                <li class="nav-item"><a class="nav-link active" id="users-tab" data-bs-toggle="tab" href="#users" role="tab"><i class="fas fa-users me-1"></i>المستخدمين</a></li>
-                <li class="nav-item"><a class="nav-link" id="storage-tab" data-bs-toggle="tab" href="#storage" role="tab"><i class="fas fa-warehouse me-1"></i>المنتجات</a></li>
-                <li class="nav-item"><a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab"><i class="fas fa-clipboard-list me-1"></i>الطلبات</a></li>
-                <li class="nav-item"><a class="nav-link" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab"><i class="fas fa-chart-line me-1"></i>لوحة التحكم</a></li>
-            </ul>
+           <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
+    <li class="nav-item"><a class="nav-link active" id="users-tab" data-bs-toggle="tab" href="#users" role="tab"><i class="fas fa-users me-1"></i>المستخدمين</a></li>
+    <li class="nav-item"><a class="nav-link" id="storage-tab" data-bs-toggle="tab" href="#storage" role="tab"><i class="fas fa-warehouse me-1"></i>المنتجات</a></li>
+    <li class="nav-item"><a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab"><i class="fas fa-clipboard-list me-1"></i>الطلبات</a></li>
+    <li class="nav-item"><a class="nav-link" id="bills-tab" data-bs-toggle="tab" href="#bills" role="tab"><i class="fas fa-file-invoice me-1"></i>الفواتير</a></li>
+</ul>
 
             <div class="loading" id="loadingSpinner">
                 <div class="spinner-border text-primary" role="status"><span class="visually-hidden">جار التحميل...</span></div>
@@ -781,7 +806,7 @@
                                             <th style="min-width:80px;">كلمة المرور</th>
                                             <th style="min-width:60px;">المستخدمين</th>
                                             <th style="min-width:60px;">المنتجات</th>
-                                            <th style="min-width:60px;">الطلبات</th>
+                                            <th style="min-width:60px;">الفواتير</th>
                                             <th style="min-width:120px;">الإجراءات</th>
                                         </tr>
                                     </thead>
@@ -950,6 +975,7 @@
                                             <th style="min-width:120px;">رقم الهاتف</th>
                                             <th style="min-width:100px;">إجمالي السعر</th>
                                             <th style="min-width:100px;">إجمالي الضريبة</th>
+                                            <th style="min-width:100px;">مبلغ التوصيل</th>
                                             <th style="min-width:110px;">المجموع الكلي</th>
                                             <th style="min-width:100px;">الحالة</th>
                                             <th style="min-width:180px;">الإجراءات</th>
@@ -984,49 +1010,84 @@
                 </div>
 
 
-                <!-- ===== نافذة لوحة التحكم ===== -->
-                <div class="tab-pane fade" id="dashboard" role="tabpanel">
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-chart-line me-2"></i>لوحة تحكم البيانات
-                            <button class="btn btn-outline-secondary btn-sm" id="loadDashboardBtn">
-                                <i class="fas fa-sync me-1"></i>تحديث
-                            </button>
-                            <span class="badge bg-secondary" id="dashboardCountBadge">عدد السجلات: 0</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive-wrapper">
-                                <table class="table table-bordered table-hover" id="dashboardTable">
-                                    <thead>
-                                        <tr>
-                                            <th style="min-width:40px;">#</th>
-                                            <th style="min-width:130px;">التوقيت</th>
-                                            <th style="min-width:120px;">المنطقة</th>
-                                            <th style="min-width:110px;">الهاتف</th>   <!-- جديد -->
-                                            <th style="min-width:120px;">الإحداثيات</th>
-                                            <th style="min-width:80px;">الرابط</th>
-                                            <th style="min-width:80px;">الصور</th>
-                                            <th style="min-width:80px;">إجراء</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="dashboardTableBody">
-                                        <tr><td colspan="7" class="text-center">جار التحميل...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="summary-bar" id="dashboardSummaryBar">
-                                <div class="summary-item">
-                                    <span class="label"><i class="fas fa-list"></i> إجمالي السجلات:</span>
-                                    <span class="value" id="totalDashboardRecords">0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!-- ===== نافذة الفواتير ===== -->
+<div class="tab-pane fade" id="bills" role="tabpanel">
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-file-invoice me-2"></i>إدارة الفواتير
+            <button class="btn btn-outline-secondary btn-sm" id="loadBillsBtn">
+                <i class="fas fa-sync me-1"></i>تحديث
+            </button>
+            <span class="badge bg-secondary" id="billsCountBadge">عدد الفواتير: 0</span>
+        </div>
+        <div class="card-body">
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i></label>
+                    <input type="text" id="searchBillInput" placeholder="بحث برقم الفاتورة أو الهاتف..." onkeyup="applyBillFilters()" />
                 </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-filter"></i> الحالة</label>
+                 <select id="filterBillStatus" onchange="applyBillFilters()">
+    <option value="">جميع الحالات</option>
+    <option value="غير مدفوع">غير مدفوع</option>
+    <option value="مدفوع جزئي">مدفوع جزئي</option>
+    <option value="مدفوع كامل">مدفوع كامل</option>
+</select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearBillFilters()">
+                        <i class="fas fa-times"></i> مسح
+                    </button>
+                </div>
+            </div>
 
-            </div>  <!-- إغلاق tab-content -->
-        </div>  <!-- إغلاق container -->
-    </div>  <!-- إغلاق mainApp -->
+            <div class="table-responsive-wrapper">
+                <table class="table table-bordered table-hover" id="billsTable">
+                    <thead>
+                        <tr>
+                            <th style="min-width:40px;">#</th>
+                            <th style="min-width:100px;">رقم الفاتورة</th>
+                            <th style="min-width:110px;">رقم الطلب</th>
+                            <th style="min-width:130px;">التاريخ</th>
+                            <th style="min-width:120px;">الهاتف</th>
+                            <th style="min-width:130px;">العميل</th>
+                            <th style="min-width:100px;">إجمالي السعر</th>
+                            <th style="min-width:100px;">إجمالي الضريبة</th>
+                            <th style="min-width:100px;">مبلغ التوصيل</th>
+                            <th style="min-width:110px;">المجموع الكلي</th>
+                            <th style="min-width:90px;">الحالة</th>
+                            <th style="min-width:160px;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billsTableBody">
+                        <tr><td colspan="10" class="text-center">جار التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-bar" id="billsSummaryBar">
+                <div class="summary-item">
+                    <span class="label"><i class="fas fa-file-invoice"></i> إجمالي الفواتير:</span>
+                    <span class="value" id="totalBills">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label"><i class="fas fa-money-bill-wave"></i> إجمالي السعر:</span>
+                    <span class="value" id="totalBillsPrice">0.000</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label"><i class="fas fa-percent"></i> إجمالي الضريبة:</span>
+                    <span class="value" id="totalBillsVat">0.000</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label"><i class="fas fa-calculator"></i> المجموع الكلي:</span>
+                    <span class="value" id="totalBillsAmount">0.000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        
 
 
     <!-- أيقونة اللودنج وسط الشاشة -->
@@ -1333,10 +1394,9 @@
         const COMPANY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUnfrfhkiN6A1xtbsPrGbCXPi6w6UIX9oWQzWyRXmclQTI53bkcvyvpsURhUT9Gii2Wg/exec';
         const ADD_TRASH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2inPEuHms2UMTsAurC2-xztEZlkZ7DU_wesr7jqiN2jmpDJl8SVdfICND7g5POHpd/exec';
         const REGIONS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyhB9vMbodQv-vCprHsItgyRrjnk50dowYWR_NfOentvLFxiTOq9V8LAZjFfAsZi6vC/exec';
-        const ORDERS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgq37ybOux0cws8apKqGn0yBqLR5h6kXfhpM1bXyxzyyT6pwZDs3TKiBuKvyCzwuB98A/exec';
-        const DATA_DASHBOARD_URL = 'https://script.google.com/macros/s/AKfycby51U-UjK-bOjq8WovQwyozj0RQ5sycHcFiaftdRcIkkzC7LBeadLyLNllWaWAUdl9vuw/exec';
-        const DASHBOARD_SHEET_ID = '1OU6bs4KeXZy8j6a033f00-SAUaNzoY8s3eXXpM4GSWo';
-        const DASHBOARD_SHEET_NAME = 'LocationLink';
+        const ORDERS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJinIfq7sZfkqMTVBEA6NItQeR7XX2vJZJCrIdHpJYDyWD20muoMNIhMXhhXG50stjSQ/exec';
+        const BILLS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpwS8NqDuyy5UgI1WZjrhwq2UL3-cKThW6jPOwP52SegeOqC27vfNZYIGXL0Fx36Gh/exec';
+       
 
         let SPLASH_LOGO_URL = 'https://via.placeholder.com/200/1e2a5a/ffffff?text=Logo';
         let LOGIN_LOGO_URL = 'https://via.placeholder.com/120/1e2a5a/ffffff?text=Logo';
@@ -1368,6 +1428,9 @@
         let allOrders = [];
         let filteredOrders = [];
         let highlightedProductId = null;
+        let allBills = [];
+        let filteredBills = [];
+
 
         document.getElementById('splashLogo').src = SPLASH_LOGO_URL;
         document.getElementById('loginLogo').src = LOGIN_LOGO_URL;
@@ -1387,66 +1450,60 @@
 
         // ======================== تعريف البطاقات ========================
 const WINDOWS = [
-    { id: 'users', icon: 'fa-users', title: 'المستخدمين', permission: 'adminUsers' },
-    { id: 'storage', icon: 'fa-warehouse', title: 'المنتجات', permission: 'adminProducts' },
-    { id: 'orders', icon: 'fa-clipboard-list', title: 'الطلبات', permission: 'adminBills' },
-    { id: 'dashboard', icon: 'fa-chart-line', title: 'لوحة التحكم', permission: 'adminBills' }
+    { id: 'users',   icon: 'fa-users',         title: 'المستخدمين', permission: 'adminUsers' },
+    { id: 'storage', icon: 'fa-warehouse',      title: 'المنتجات',   permission: 'adminProducts' },
+    { id: 'orders',  icon: 'fa-clipboard-list', title: 'الطلبات'   },  // ✅ بدون permission
+    { id: 'bills',   icon: 'fa-file-invoice',   title: 'الفواتير',   permission: 'adminBills' },
 ];
 
-     function renderWelcomeCards() {
+function renderWelcomeCards() {
     const grid = document.getElementById('welcomeGrid');
     grid.innerHTML = '';
     WINDOWS.forEach(win => {
-        const hasPermission = currentUser && currentUser[win.permission] === 'TRUE';
+        // ✅ إذا لم يكن هناك permission → يظهر للجميع
+        const hasPermission = !win.permission || (currentUser && currentUser[win.permission] === 'TRUE');
         if (hasPermission) {
             const card = document.createElement('div');
             card.className = 'welcome-card';
             card.setAttribute('data-window', win.id);
             card.innerHTML = `<span class="welcome-card-icon"><i class="fas ${win.icon}"></i></span><div class="welcome-card-title">${win.title}</div>`;
             card.addEventListener('click', function() {
-                if (win.isExternal) {
-                    // فتح لوحة التحكم في نافذة جديدة
-                    globalThis.open(win.url, '_blank');
-                } else {
-                    openWindow(win.id);
-                }
+                if (win.isExternal) globalThis.open(win.url, '_blank');
+                else openWindow(win.id);
             });
             grid.appendChild(card);
         }
     });
 
-    // أيقونة الشركة
-    const companyCard = document.createElement('div');
-    companyCard.className = 'welcome-card';
-    companyCard.innerHTML = `<span class="welcome-card-icon"><i class="fas fa-building"></i></span><div class="welcome-card-title">الشركة</div>`;
-    companyCard.addEventListener('click', function() { openCompanyModal(); });
-    grid.appendChild(companyCard);
+    if (currentUser && currentUser.adminUsers === 'TRUE') {
+        const companyCard = document.createElement('div');
+        companyCard.className = 'welcome-card';
+        companyCard.innerHTML = `<span class="welcome-card-icon"><i class="fas fa-building"></i></span><div class="welcome-card-title">الشركة</div>`;
+        companyCard.addEventListener('click', function() { openCompanyModal(); });
+        grid.appendChild(companyCard);
+    }
 }
 
-   function buildNavbar() {
+ function buildNavbar() {
     const navActions = document.getElementById('navActions');
     navActions.innerHTML = '';
-    
+
     const homeBtn = document.createElement('button');
     homeBtn.className = 'nav-btn home-btn';
     homeBtn.innerHTML = '<i class="fas fa-home"></i> الرئيسية';
     homeBtn.addEventListener('click', goToWelcome);
     navActions.appendChild(homeBtn);
-    
+
     WINDOWS.forEach(win => {
-        const hasPermission = currentUser && currentUser[win.permission] === 'TRUE';
+        // ✅ نفس المنطق: بدون permission = يظهر للجميع
+        const hasPermission = !win.permission || (currentUser && currentUser[win.permission] === 'TRUE');
         if (hasPermission) {
             const btn = document.createElement('button');
             btn.className = 'nav-btn';
             btn.setAttribute('data-window', win.id);
             btn.innerHTML = `<i class="fas ${win.icon}"></i> ${win.title}`;
             btn.addEventListener('click', function() {
-                if (win.isExternal) {
-                    // فتح لوحة التحكم في نافذة جديدة
-                    globalThis.open(win.url, '_blank');
-                    return;
-                }
-                
+                if (win.isExternal) { globalThis.open(win.url, '_blank'); return; }
                 document.querySelectorAll('.nav-btn[data-window]').forEach(b => {
                     b.classList.remove('active-window');
                     b.style.background = 'rgba(255,255,255,0.15)';
@@ -1463,18 +1520,20 @@ const WINDOWS = [
         }
     });
 
-    const companyBtn = document.createElement('button');
-    companyBtn.className = 'nav-btn';
-    companyBtn.innerHTML = '<i class="fas fa-building"></i> الشركة';
-    companyBtn.addEventListener('click', openCompanyModal);
-    navActions.appendChild(companyBtn);
-    
+    if (currentUser && currentUser.adminUsers === 'TRUE') {
+        const companyBtn = document.createElement('button');
+        companyBtn.className = 'nav-btn';
+        companyBtn.innerHTML = '<i class="fas fa-building"></i> الشركة';
+        companyBtn.addEventListener('click', openCompanyModal);
+        navActions.appendChild(companyBtn);
+    }
+
     const logoutBtn = document.createElement('button');
     logoutBtn.className = 'nav-btn logout-btn-nav';
     logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> خروج';
     logoutBtn.addEventListener('click', logout);
     navActions.appendChild(logoutBtn);
-    
+
     document.getElementById('navUserName').textContent = currentUser ? currentUser.name || 'مستخدم' : 'مستخدم';
 }
 
@@ -1503,7 +1562,7 @@ const WINDOWS = [
                 }
             });
             
-            const tabIds = ['users', 'storage', 'orders', 'dashboard'];
+           const tabIds = ['users', 'storage', 'orders', 'bills'];
             tabIds.forEach(id => {
                 const tab = document.getElementById(id + '-tab');
                 const pane = document.getElementById(id);
@@ -1536,9 +1595,10 @@ const WINDOWS = [
                     if (id === 'orders') {
                         loadOrders();
                     }
-                       if (id === 'dashboard') {
-                        loadDashboardData();
+                    if (id === 'bills') {
+                    loadBills();
                     }
+                  
                 } else {
                     
                     tab.classList.add('hidden-tab');
@@ -1719,10 +1779,10 @@ params.append('_t', Date.now());
         
         function loadUsers() {
             if (!currentUser || currentUser.adminUsers !== 'TRUE') {
-                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="10" class="text-center text-warning">⚠️ ليس لديك صلاحية لعرض المستخدمين</td></tr>';
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="11" class="text-center text-warning">⚠️ ليس لديك صلاحية لعرض المستخدمين</td></tr>';
                 return;
             }
-            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="10" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span>جار التحميل...</td></tr>';
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="11" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span>جار التحميل...</td></tr>';
             
             callUsersScript('read')
                 .then(result => {
@@ -1734,7 +1794,7 @@ params.append('_t', Date.now());
                     }
                 })
                 .catch(err => {
-                    document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="10" class="text-center text-danger">${err.message}</td></tr>`;
+                    document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="11" class="text-center text-danger">${err.message}</td></tr>`;
                 });
         }
 
@@ -1764,71 +1824,71 @@ params.append('_t', Date.now());
             const inputRow = document.createElement('tr');
             inputRow.className = 'input-row';
             inputRow.id = 'userInputRow';
-            inputRow.innerHTML = `
-                <td><span class="badge bg-success">جديد</span></td>
-                <td><input type="text" id="inputUserName" class="form-control form-control-sm" placeholder="الاسم" /></td>
-                <td><input type="text" id="inputUserPhone" class="form-control form-control-sm" placeholder="الهاتف" /></td>
-                <td>
-                    <select id="inputUserJob" class="form-select form-select-sm">
-                        <option value="المدير">المدير</option>
-                        <option value="مدخل بيانات">مدخل بيانات</option>
-                        <option value="محاسب">محاسب</option>
-                        <option value="موظف" selected>موظف</option>
-                        <option value="عامل">عامل</option>
-                    </select>
-                </td>
-                <td><input type="text" id="inputUserPlace" class="form-control form-control-sm" placeholder="السكن" /></td>
-                <td>
-                    <div style="position:relative; width:100%;">
-                        <input type="password" id="inputUserPassword" class="form-control form-control-sm" placeholder="كلمة المرور" value="" style="padding-left:35px;" />
-                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('inputUserPassword', this)" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); border:none; background:transparent; padding:0; color:#666; cursor:pointer;">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </td>
-                <td><input type="checkbox" id="inputChkUsers" class="form-check-input" /></td>
-                <td><input type="checkbox" id="inputChkProducts" class="form-check-input" /></td>
-                <td><input type="checkbox" id="inputChkBills" class="form-check-input" /></td>
-                <td>
-                    <button class="btn btn-primary btn-sm w-100 add-row-btn" id="addUserBtn"><i class="fas fa-plus"></i> إضافة</button>
-                </td>
-            `;
+           inputRow.innerHTML = `
+    <td><span class="badge bg-success">جديد</span></td>
+    <td><input type="text" id="inputUserName" class="form-control form-control-sm" placeholder="الاسم" /></td>
+    <td><input type="text" id="inputUserPhone" class="form-control form-control-sm" placeholder="الهاتف" /></td>
+    <td>
+        <select id="inputUserJob" class="form-select form-select-sm">
+            <option value="المدير">المدير</option>
+            <option value="مدخل بيانات">مدخل بيانات</option>
+            <option value="محاسب">محاسب</option>
+            <option value="موظف" selected>موظف</option>
+            <option value="عامل">عامل</option>
+        </select>
+    </td>
+    <td><input type="text" id="inputUserPlace" class="form-control form-control-sm" placeholder="السكن" /></td>
+    <td>
+        <div style="position:relative; width:100%;">
+            <input type="password" id="inputUserPassword" class="form-control form-control-sm" placeholder="كلمة المرور" value="" style="padding-left:35px;" />
+            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('inputUserPassword', this)" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); border:none; background:transparent; padding:0; color:#666; cursor:pointer;">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+    </td>
+    <td><input type="checkbox" id="inputChkUsers"    class="form-check-input" /></td>
+    <td><input type="checkbox" id="inputChkProducts" class="form-check-input" /></td>
+    <td><input type="checkbox" id="inputChkBills"    class="form-check-input" /></td>  <!-- ✅ جديد -->
+    <td>
+        <button class="btn btn-primary btn-sm w-100 add-row-btn" id="addUserBtn"><i class="fas fa-plus"></i> إضافة</button>
+    </td>
+`;
             tbody.appendChild(inputRow);
 
             if (!users || users.length === 0) {
                 const emptyRow = document.createElement('tr');
-                emptyRow.innerHTML = '<td colspan="10" class="text-center text-muted">لا توجد مستخدمين مطابقين للبحث</td>';
+                emptyRow.innerHTML = '<td colspan="11" class="text-center text-muted">لا توجد مستخدمين مطابقين للبحث</td>';
                 tbody.appendChild(emptyRow);
             } else {
-                users.forEach((u, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.dataset.id = u.id;
-                    const password = u.password || '********';
-                    tr.innerHTML = `
-                        <td>${idx+1}</td>
-                        <td>${u.name||''}</td>
-                        <td>${u.phone||''}</td>
-                        <td>${u.job||''}</td>
-                        <td>${u.place||''}</td>
-                        <td>
-                            <div style="display:flex; align-items:center; gap:4px; direction:ltr; justify-content:center;">
-                                <button class="btn btn-outline-secondary btn-sm toggle-password-btn" type="button" onclick="togglePasswordVisibilityRow(this, '${password}')" style="padding:2px 6px; font-size:12px;">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <span class="password-display" style="font-family:monospace; direction:ltr; font-size:0.85rem;">${'*'.repeat(Math.min(password.length, 8))}</span>
-                            </div>
-                        </td>
-                        <td>${u.adminUsers==='TRUE'?'✅':'❌'}</td>
-                        <td>${u.adminProducts==='TRUE'?'✅':'❌'}</td>
-                        <td>${u.adminBills==='TRUE'?'✅':'❌'}</td>
-                        <td class="action-btns">
-                            <button class="btn btn-warning btn-sm edit-user-btn" data-id="${u.id}"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm delete-user-btn" data-id="${u.id}" data-name="${u.name}"><i class="fas fa-trash"></i></button>
-                            <button class="btn btn-info btn-sm print-user-qr-btn" data-id="${u.id}"><i class="fas fa-qrcode"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+               users.forEach((u, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = u.id;
+    const password = u.password || '********';
+    tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${u.name||''}</td>
+        <td>${u.phone||''}</td>
+        <td>${u.job||''}</td>
+        <td>${u.place||''}</td>
+        <td>
+            <div style="display:flex; align-items:center; gap:4px; direction:ltr; justify-content:center;">
+                <button class="btn btn-outline-secondary btn-sm toggle-password-btn" type="button" onclick="togglePasswordVisibilityRow(this, '${password}')" style="padding:2px 6px; font-size:12px;">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <span class="password-display" style="font-family:monospace; direction:ltr; font-size:0.85rem;">${'*'.repeat(Math.min(password.length, 8))}</span>
+            </div>
+        </td>
+        <td>${u.adminUsers    === 'TRUE' ? '✅' : '❌'}</td>
+        <td>${u.adminProducts === 'TRUE' ? '✅' : '❌'}</td>
+        <td>${u.adminBills    === 'TRUE' ? '✅' : '❌'}</td>  <!-- ✅ جديد -->
+        <td class="action-btns">
+            <button class="btn btn-warning btn-sm edit-user-btn" data-id="${u.id}"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm delete-user-btn" data-id="${u.id}" data-name="${u.name}"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-info btn-sm print-user-qr-btn" data-id="${u.id}"><i class="fas fa-qrcode"></i></button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+});
             }
 
             document.getElementById('userCount').textContent = `عدد المستخدمين: ${users ? users.length : 0}`;
@@ -1905,16 +1965,16 @@ params.append('_t', Date.now());
                 return;
             }
 
-            const data = {
-                name: name,
-                phone: phone,
-                password: password,
-                job: job,
-                place: place,
-                adminUsers: document.getElementById('inputChkUsers').checked ? 'TRUE' : 'FALSE',
-                adminProducts: document.getElementById('inputChkProducts').checked ? 'TRUE' : 'FALSE',
-                adminBills: document.getElementById('inputChkBills').checked ? 'TRUE' : 'FALSE'
-            };
+         const data = {
+    name: name,
+    phone: phone,
+    password: password,
+    job: job,
+    place: place,
+    adminUsers:    document.getElementById('inputChkUsers').checked    ? 'TRUE' : 'FALSE',
+    adminProducts: document.getElementById('inputChkProducts').checked ? 'TRUE' : 'FALSE',
+    adminBills:    document.getElementById('inputChkBills').checked    ? 'TRUE' : 'FALSE'
+};
 
             callUsersScript('create', data)
                 .then(res => {
@@ -1979,17 +2039,17 @@ params.append('_t', Date.now());
                 return;
             }
 
-            const data = {
-                id: id,
-                name: name,
-                phone: phone,
-                password: password,
-                job: job,
-                place: place,
-                adminUsers: document.getElementById('inputChkUsers').checked ? 'TRUE' : 'FALSE',
-                adminProducts: document.getElementById('inputChkProducts').checked ? 'TRUE' : 'FALSE',
-                adminBills: document.getElementById('inputChkBills').checked ? 'TRUE' : 'FALSE'
-            };
+           const data = {
+    id: id,
+    name: name,
+    phone: phone,
+    password: password,
+    job: job,
+    place: place,
+    adminUsers:    document.getElementById('inputChkUsers').checked    ? 'TRUE' : 'FALSE',
+    adminProducts: document.getElementById('inputChkProducts').checked ? 'TRUE' : 'FALSE',
+    adminBills:    document.getElementById('inputChkBills').checked    ? 'TRUE' : 'FALSE'
+};
 
             callUsersScript('update', data)
                 .then(res => {
@@ -4193,6 +4253,10 @@ window.onload=function(){
             document.getElementById('addTrashNo').addEventListener('input', calcTotal);
             document.getElementById('addTrashPrice').addEventListener('input', calcTotal);
             document.getElementById('addTrashVatPercent').addEventListener('input', calcTotal);
+             const loadBillsBtn = document.getElementById('loadBillsBtn');
+    if (loadBillsBtn) {
+        loadBillsBtn.addEventListener('click', loadBills);
+    }
         });
 
         async function saveAddTrashOperation() {
@@ -4477,11 +4541,12 @@ window.onload=function(){
             return `
                 <tr data-order-id="${o.OrderID}">
                     <td>${idx + 1}</td>
-                    <td><strong>#${o.OrderNo}</strong></td>
+                    <td><strong>${o.OrderID}</strong></td>
                     <td>${dateStr}</td>
                     <td style="direction:ltr;">${o.OrderPhone}</td>
                     <td>${o.OrderTotPxQ.toFixed(3)}</td>
                     <td>${o.OrderTotVat.toFixed(3)}</td>
+                    <td>${o.OrderDelivery.toFixed(3)}</td>
                     <td style="font-weight:bold; color:#1e2a5a;">${o.OrderTotalDelivery.toFixed(3)}</td>
                     <td><span class="badge ${statusColor}">${statusText}</span></td>
                     <td class="action-btns">
@@ -4560,38 +4625,24 @@ window.onload=function(){
             if (deleteBtn) return deleteOrder(deleteBtn.dataset.orderId);
         });
 
-        function formatOrderDate(dateValue) {
-            if (!dateValue) return '-';
-            try {
-                const str = dateValue.toString().trim();
-                
-                if (str.includes('T')) {
-                    const d = new Date(str);
-                    if (!isNaN(d)) {
-                        const day = String(d.getDate()).padStart(2, '0');
-                        const month = String(d.getMonth() + 1).padStart(2, '0');
-                        const year = d.getFullYear();
-                        const hours = String(d.getHours()).padStart(2, '0');
-                        const minutes = String(d.getMinutes()).padStart(2, '0');
-                        return `${day}/${month}/${year} ${hours}:${minutes}`;
-                    }
-                }
-                
-                const match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-                if (match) {
-                    return `${match[1].padStart(2,'0')}/${match[2].padStart(2,'0')}/${match[3]} ${match[4].padStart(2,'0')}:${match[5]}`;
-                }
-                
-                const match2 = str.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
-                if (match2) {
-                    return `${match2[3]}/${match2[2]}/${match2[1]} ${match2[4]}:${match2[5]}`;
-                }
-                
-                return str;
-            } catch {
-                return dateValue;
-            }
-        }
+function formatOrderDate(dateValue) {
+    if (!dateValue) return '-';
+    const pad = n => String(n).padStart(2, '0');
+    const fmt = (d, mo, y, h, mi) => `${pad(d)}-${pad(mo)}-${y} ${pad(h)}:${pad(mi)}`;
+    const str = dateValue.toString().trim();
+
+    if (str.includes('T')) {
+        const d = new Date(str);
+        if (!isNaN(d)) return fmt(d.getDate(), d.getMonth() + 1, d.getFullYear(), d.getHours(), d.getMinutes());
+    }
+    let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (m) return fmt(m[3], m[2], m[1], m[4] || 0, m[5] || 0);
+    m = str.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (m) return fmt(m[1], m[2], m[3], m[4] || 0, m[5] || 0);
+    const d = new Date(str);
+    if (!isNaN(d)) return fmt(d.getDate(), d.getMonth() + 1, d.getFullYear(), d.getHours(), d.getMinutes());
+    return str;
+}
 
         function updateOrdersSummary(orders) {
             let totalPrice = 0;
@@ -4674,157 +4725,156 @@ window.onload=function(){
         }
 
         function viewOrderDetails(orderId) {
-            const order = allOrders.find(o => o.OrderID === orderId);
-            if (!order) {
-                showToast('⚠️ الطلب غير موجود', 'warning');
-                return;
-            }
-            
-            const products = (order.OrderProducts || '').split(',').filter(x => x.trim());
-            const quantities = (order.OrderQNT || '').split(',').filter(x => x.trim());
-            const prices = (order.OrderPrice || '').split(',').filter(x => x.trim());
-            const amounts = (order.OrderPxQ || '').split(',').filter(x => x.trim());
-            const vats = (order.OrderVat || '').split(',').filter(x => x.trim());
-            const barcodes = (order.OrderBarcode || '').split(',').filter(x => x.trim());
-            
-            let productsHtml = `
-                <table class="table table-bordered table-sm" style="font-size:0.85rem; margin:0;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>الباركود</th>
-                            <th>المنتج</th>
-                            <th>الكمية</th>
-                            <th>السعر</th>
-                            <th>الإجمالي</th>
-                            <th>الضريبة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
-            for (let i = 0; i < maxLen; i++) {
-                productsHtml += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${barcodes[i] || '-'}</td>
-                        <td>${products[i] || '-'}</td>
-                        <td>${quantities[i] || 0}</td>
-                        <td>${parseFloat(prices[i] || 0).toFixed(3)}</td>
-                        <td>${parseFloat(amounts[i] || 0).toFixed(3)}</td>
-                        <td>${parseFloat(vats[i] || 0).toFixed(3)}</td>
-                    </tr>
-                `;
-            }
-            productsHtml += '</tbody></table>';
-            
-            const totalDelivery = order.OrderTotalDelivery || 0;
-            const paidAmount = order.OrderAdvance || 0;
-            const balanceAmount = totalDelivery - paidAmount;
-            
-            const modal = document.createElement('div');
-            modal.id = 'orderDetailsModal';
-            modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; z-index:100100; padding:20px;';
-            modal.innerHTML = `
-                <div style="background:white; border-radius:18px; width:95%; max-width:950px; max-height:92vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-                    <div style="background:linear-gradient(135deg,#1e2a5a,#2a3a7a); color:white; padding:15px 22px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-                        <h5 style="margin:0;"><i class="fas fa-file-invoice me-2"></i>تفاصيل الطلب #${order.OrderNo}</h5>
-                        <button onclick="document.getElementById('orderDetailsModal').remove()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
-                    </div>
-                    <div style="padding:20px; overflow-y:auto; flex:1; background:#f8f9fa;">
-                        <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:15px;">
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.95rem;">
-                                <div><strong>رقم الطلب:</strong> #${order.OrderNo}</div>
-                                <div><strong>معرف الطلب:</strong> <span style="font-size:0.8rem; color:#666;">${order.OrderID}</span></div>
-                                <div><strong>التاريخ:</strong> ${formatOrderDate(order.OrderDate)}</div>
-                                <div><strong>الهاتف:</strong> <span style="direction:ltr;">${order.OrderPhone}</span></div>
-                                <div><strong>الموقع:</strong> ${order.OrderLocation || '-'}</div>
-                                <div><strong>اسم الزبون:</strong> ${order.OrderCustomer || order.OrderPhone || ''}</div>
-                            </div>
-                        </div>
-                        <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:15px;">
-                            <h6 style="margin-bottom:10px; color:#1e2a5a; border-bottom:2px solid #1e2a5a; padding-bottom:8px;">
-                                <i class="fas fa-box me-2"></i>📦 المنتجات
-                            </h6>
-                            <div style="overflow-x:auto;">
-                                ${productsHtml}
-                            </div>
-                        </div>
-                        <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:15px;">
-                            <h6 style="margin-bottom:12px; color:#1e2a5a; border-bottom:2px solid #1e2a5a; padding-bottom:8px;">
-                                <i class="fas fa-calculator me-2"></i>ملخص الحساب
-                            </h6>
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">إجمالي السعر</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotPxQ.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">إجمالي الضريبة</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotVat.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">المجموع + الضريبة</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotAMvVAT.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#fff3cd; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#856404;">التخفيض</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#dc3545;">${order.OrderTotDiscount.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#d4edda; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#155724;">بعد التخفيض</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#155724;">${order.OrderTotAMvDIS.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">التوصيل</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderDelivery.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">الكمية الكلية</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotQNT || 0}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">طريقة الدفع</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderWay || '-'}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">المدفوع</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:#28a745;">${paidAmount.toFixed(3)}</div>
-                                </div>
-                                <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
-                                    <div style="font-size:0.8rem; color:#6c757d;">الباقي</div>
-                                    <div style="font-size:1.1rem; font-weight:bold; color:${balanceAmount <= 0 ? '#28a745' : '#dc3545'};">${balanceAmount.toFixed(3)}</div>
-                                </div>
-                            </div>
-                            <div style="grid-column:1/-1; text-align:center; padding:12px; background:linear-gradient(135deg,#1e2a5a,#2a3a7a); border-radius:8px; margin-top:10px;">
-                                <div style="font-size:0.85rem; color:rgba(255,255,255,0.8);">الإجمالي النهائي</div>
-                                <div style="font-size:1.5rem; font-weight:bold; color:white;">${totalDelivery.toFixed(3)} ر.ع</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="padding:15px; border-top:1px solid #dee2e6; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; flex-shrink:0; background:white;">
-                        <button onclick="document.getElementById('orderDetailsModal').remove()" class="btn btn-secondary" 
-                                style="padding:10px 30px; border-radius:8px; font-weight:bold;">
-                            <i class="fas fa-times me-2"></i>إغلاق
-                        </button>
+    const order = allOrders.find(o => o.OrderID === orderId);
+    if (!order) {
+        showToast('⚠️ الطلب غير موجود', 'warning');
+        return;
+    }
+ 
+    const products = (order.OrderProducts || '').split(',').filter(x => x.trim());
+    const quantities = (order.OrderQNT || '').split(',').filter(x => x.trim());
+    const prices = (order.OrderPrice || '').split(',').filter(x => x.trim());
+    const amounts = (order.OrderPxQ || '').split(',').filter(x => x.trim());
+    const vats = (order.OrderVat || '').split(',').filter(x => x.trim());
+    const barcodes = (order.OrderBarcode || '').split(',').filter(x => x.trim());
+ 
+    let productsHtml = `
+        <table class="table table-bordered table-sm" style="font-size:0.85rem; margin:0;">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>الباركود</th>
+                    <th>المنتج</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>الإجمالي</th>
+                    <th>الضريبة</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+ 
+    const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
+    for (let i = 0; i < maxLen; i++) {
+        productsHtml += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${barcodes[i] || '-'}</td>
+                <td>${products[i] || '-'}</td>
+                <td>${quantities[i] || 0}</td>
+                <td>${parseFloat(prices[i] || 0).toFixed(3)}</td>
+                <td>${parseFloat(amounts[i] || 0).toFixed(3)}</td>
+                <td>${parseFloat(vats[i] || 0).toFixed(3)}</td>
+            </tr>
+        `;
+    }
+    productsHtml += '</tbody></table>';
+ 
+    const totalDelivery = order.OrderTotalDelivery || 0;
+    const paidAmount = order.OrderAdvance || 0;
+    const balanceAmount = totalDelivery - paidAmount;
+ 
+    const modal = document.createElement('div');
+    modal.id = 'orderDetailsModal';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; z-index:100100; padding:20px;';
+    modal.innerHTML = `
+        <div style="background:white; border-radius:18px; width:95%; max-width:950px; max-height:92vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="background:linear-gradient(135deg,#1e2a5a,#2a3a7a); color:white; padding:15px 22px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                <h5 style="margin:0;"><i class="fas fa-file-invoice me-2"></i>تفاصيل الطلب ${order.OrderID}</h5>
+                <button onclick="document.getElementById('orderDetailsModal').remove()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:20px; overflow-y:auto; flex:1; background:#f8f9fa;">
+                <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:15px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.95rem;">
+                        <div><strong>رقم الطلب:</strong> ${order.OrderID}</div>
+                        <div><strong>التاريخ:</strong> ${formatOrderDate(order.OrderDate)}</div>
+                        <div><strong>الهاتف:</strong> <span style="direction:ltr;">${order.OrderPhone}</span></div>
+                        <div><strong>اسم الزبون:</strong> ${order.OrderCustomer || order.OrderPhone || ''}</div>
+                        <div style="grid-column:1/-1;"><strong>الموقع:</strong> ${order.OrderLocation || '-'}</div>
                     </div>
                 </div>
-            `;
-            document.body.appendChild(modal);
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) modal.remove();
-            });
-            
-            document.addEventListener('keydown', function closeOnEsc(e) {
-                if (e.key === 'Escape') {
-                    const m = document.getElementById('orderDetailsModal');
-                    if (m) m.remove();
-                    document.removeEventListener('keydown', closeOnEsc);
-                }
-            });
+                <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:15px;">
+                    <h6 style="margin-bottom:10px; color:#1e2a5a; border-bottom:2px solid #1e2a5a; padding-bottom:8px;">
+                        <i class="fas fa-box me-2"></i>📦 المنتجات
+                    </h6>
+                    <div style="overflow-x:auto;">
+                        ${productsHtml}
+                    </div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:15px;">
+                    <h6 style="margin-bottom:12px; color:#1e2a5a; border-bottom:2px solid #1e2a5a; padding-bottom:8px;">
+                        <i class="fas fa-calculator me-2"></i>ملخص الحساب
+                    </h6>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">إجمالي السعر</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotPxQ.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">إجمالي الضريبة</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotVat.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">المجموع + الضريبة</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotAMvVAT.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#fff3cd; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#856404;">التخفيض</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#dc3545;">${order.OrderTotDiscount.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#d4edda; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#155724;">بعد التخفيض</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#155724;">${order.OrderTotAMvDIS.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">التوصيل</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderDelivery.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">الكمية الكلية</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderTotQNT || 0}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">طريقة الدفع</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#1e2a5a;">${order.OrderWay || '-'}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">المدفوع</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:#28a745;">${paidAmount.toFixed(3)}</div>
+                        </div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;">
+                            <div style="font-size:0.8rem; color:#6c757d;">الباقي</div>
+                            <div style="font-size:1.1rem; font-weight:bold; color:${balanceAmount <= 0 ? '#28a745' : '#dc3545'};">${balanceAmount.toFixed(3)}</div>
+                        </div>
+                    </div>
+                    <div style="grid-column:1/-1; text-align:center; padding:12px; background:linear-gradient(135deg,#1e2a5a,#2a3a7a); border-radius:8px; margin-top:10px;">
+                        <div style="font-size:0.85rem; color:rgba(255,255,255,0.8);">الإجمالي النهائي</div>
+                        <div style="font-size:1.5rem; font-weight:bold; color:white;">${totalDelivery.toFixed(3)} ر.ع</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:15px; border-top:1px solid #dee2e6; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; flex-shrink:0; background:white;">
+                <button onclick="document.getElementById('orderDetailsModal').remove()" class="btn btn-secondary"
+                        style="padding:10px 30px; border-radius:8px; font-weight:bold;">
+                    <i class="fas fa-times me-2"></i>إغلاق
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+ 
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+ 
+    document.addEventListener('keydown', function closeOnEsc(e) {
+        if (e.key === 'Escape') {
+            const m = document.getElementById('orderDetailsModal');
+            if (m) m.remove();
+            document.removeEventListener('keydown', closeOnEsc);
         }
+    });
+}
 
         function editOrderStatus(orderId) {
             const order = allOrders.find(o => o.OrderID === orderId);
@@ -4863,35 +4913,86 @@ window.onload=function(){
             document.body.appendChild(modal);
         }
 
-        async function saveOrderStatus(orderId) {
-            const newStatus = document.getElementById('editOrderStatusSelect').value;
-            const order = allOrders.find(o => o.OrderID === orderId);
-            if (!order) {
-                showToast('⚠️ الطلب غير موجود', 'warning');
-                return;
-            }
-            
-            showLoading();
-            
-            try {
-                const url = `${ORDERS_SCRIPT_URL}?action=updateOrder&OrderID=${encodeURIComponent(orderId)}&OrderStatue=${encodeURIComponent(newStatus)}`;
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                hideLoading();
-                
-           if (result.status === 200 || result.status === 'success') {
-    showRegionsAlert('تم الحفظ بنجاح', 'success');
-    fetchRegionsData();
-} else {
-    showRegionsAlert(result.message || 'فشل الحفظ', 'danger');
+       function computePaymentStatus(total, paid) {
+    total = parseFloat(total) || 0;
+    paid  = parseFloat(paid)  || 0;
+    if (paid <= 0) return 'غير مدفوع';
+    if (paid >= total && total > 0) return 'مدفوع كامل';
+    return 'مدفوع جزئي';
 }
-            } catch (err) {
-                hideLoading();
-                console.error(err);
-                showToast('❌ فشل التحديث', 'error');
-            }
+
+function getBillStatusInfo(s) {
+    const map = {
+        'غير مدفوع':  { text: 'غير مدفوع',  badge: 'bg-danger',  color: '#dc3545' },
+        'مدفوع جزئي': { text: 'مدفوع جزئي', badge: 'bg-warning', color: '#ffc107' },
+        'مدفوع كامل': { text: 'مدفوع كامل', badge: 'bg-success', color: '#28a745' }
+    };
+    return map[s] || { text: s || '-', badge: 'bg-secondary', color: '#6c757d' };
+}
+
+async function saveOrderStatus(orderId) {
+    const newStatus = document.getElementById('editOrderStatusSelect').value;
+    const order = allOrders.find(o => o.OrderID === orderId);
+    if (!order) { showToast('⚠️ الطلب غير موجود', 'warning'); return; }
+
+    const oldStatus = order.OrderStatue;
+    showLoading();
+
+    try {
+        const url = `${ORDERS_SCRIPT_URL}?action=updateOrder&OrderID=${encodeURIComponent(orderId)}&OrderStatue=${encodeURIComponent(newStatus)}`;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (!(result.status === 'success' || result.status === 200)) {
+            hideLoading();
+            showToast('❌ ' + (result.message || 'فشل التحديث'), 'error');
+            return;
         }
+
+        order.OrderStatue = newStatus;
+        renderOrdersTable(filteredOrders);
+        updateOrdersSummary(filteredOrders);
+        document.getElementById('editOrderStatusModal')?.remove();
+
+        // عند التأكيد لأول مرة → نسخة إلى الفواتير
+        if (newStatus === 'Confirmed' && oldStatus !== 'Confirmed') {
+            try {
+                const created = await createBillFromOrder(order);
+                hideLoading();
+                showToast(created ? '✅ تم التأكيد وإرسال نسخة إلى الفواتير'
+                                  : '✅ تم التأكيد (الفاتورة موجودة مسبقاً)', 'success');
+            } catch (e) {
+                hideLoading();
+                console.error(e);
+                showToast('⚠️ تم التأكيد لكن فشل إنشاء الفاتورة: ' + e.message, 'warning', 3000);
+            }
+        } else {
+            hideLoading();
+            showToast('✅ تم تحديث حالة الطلب', 'success');
+        }
+    } catch (err) {
+        hideLoading();
+        console.error(err);
+        showToast('❌ فشل التحديث', 'error');
+    }
+}
+
+async function createBillFromOrder(order) {
+    const payload = {
+        action: 'addOrUpdateBillFromOrder',
+        ...order,
+        BillCashair: (currentUser && (currentUser.name || currentUser.phone)) || ''
+    };
+
+    const res = await fetch(BILLS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'cors',
+        body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.status !== 'success') throw new Error(json.message || 'فشل إنشاء الفاتورة');
+    return json.type === 'created';
+}
 
         function deleteOrder(orderId) {
             const order = allOrders.find(o => o.OrderID === orderId);
@@ -4927,254 +5028,250 @@ window.onload=function(){
         }
 
         function printOrder(orderId) {
-            const order = allOrders.find(o => o.OrderID === orderId);
-            if (!order) {
-                showToast('⚠️ الطلب غير موجود', 'warning');
-                return;
-            }
-            
-            const logoImage = document.getElementById('compLogoPreview')?.src || '';
-            const footerStamp = document.getElementById('compFooterPreview')?.src || '';
-            const companyName = companyData.name || 'السوبر ماركت';
-            const companyTaxNumber = document.getElementById('compNO')?.value || '';
-            const companyPhone = document.getElementById('compPhone')?.value || '';
-            const companyLocation = document.getElementById('compLocationSearch')?.value 
-                                  || document.getElementById('compLocationLink')?.value || '';
-            
-            const products = (order.OrderProducts || '').split(',').filter(x => x.trim());
-            const quantities = (order.OrderQNT || '').split(',').filter(x => x.trim());
-            const prices = (order.OrderPrice || '').split(',').filter(x => x.trim());
-            const amounts = (order.OrderPxQ || '').split(',').filter(x => x.trim());
-            const vats = (order.OrderVat || '').split(',').filter(x => x.trim());
-            const barcodes = (order.OrderBarcode || '').split(',').filter(x => x.trim());
-            
-            let productsHtml = '';
-            const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
-            for (let i = 0; i < maxLen; i++) {
-                const qty = parseFloat(quantities[i] || 0);
-                const price = parseFloat(prices[i] || 0);
-                const amount = parseFloat(amounts[i] || 0);
-                const vat = parseFloat(vats[i] || 0);
-                const total = amount + vat;
-                
-                productsHtml += `
-                    <tr>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${i + 1}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${barcodes[i] || '-'}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:right;font-size:11px;">${products[i] || '-'}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${qty}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${price.toFixed(3)}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${amount.toFixed(3)}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${vat.toFixed(3)}</td>
-                        <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;font-weight:bold;color:#1e2a5a;">${total.toFixed(3)}</td>
-                    </tr>
-                `;
-            }
-            
-            const totalDelivery = order.OrderTotalDelivery || 0;
-            const paidAmount = order.OrderAdvance || 0;
-            const balanceAmount = totalDelivery - paidAmount;
-            
-            let statusText = order.OrderStatue;
-            let statusColor = '#6c757d';
-            if (order.OrderStatue === 'Pendding') { statusText = 'جديد'; statusColor = '#ffc107'; }
-            else if (order.OrderStatue === 'Confirmed') { statusText = 'مؤكد'; statusColor = '#17a2b8'; }
-            else if (order.OrderStatue === 'Delivered') { statusText = 'تم التوصيل'; statusColor = '#28a745'; }
-            else if (order.OrderStatue === 'Cancelled') { statusText = 'ملغي'; statusColor = '#dc3545'; }
-            
-            const paymentMethods = {
-                'Cash': '💵 كاش', 'Visa': '💳 فيزا', 'BankT': '🏦 تحويل بنكي',
-                'Check': '📝 شيك', 'Debtor': '📋 آجل', 'Other': '🔄 أخرى'
-            };
-            const paymentText = paymentMethods[order.OrderWay] || order.OrderWay || '-';
-            
-            const printContent = `
-                <!DOCTYPE html>
-                <html dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>طلب #${order.OrderNo}</title>
-                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
-                    <style>
-                        * { margin:0; padding:0; box-sizing:border-box; }
-                        body { font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif; background:white; direction:rtl; padding:0; }
-                        .invoice-wrapper { max-width:210mm; margin:0 auto; background:white; padding:15px 20px 10px 20px; min-height:100vh; display:flex; flex-direction:column; }
-                        .invoice-header { text-align:center; padding:0 0 10px 0; border-bottom:2px solid #1e2a5a; margin-bottom:12px; }
-                        .header-logo { max-width:110px; max-height:110px; object-fit:contain; display:block; margin:0 auto 8px auto; border-radius:8px; }
-                        .company-name-header { font-size:22px; font-weight:bold; color:#1e2a5a; margin-bottom:4px; }
-                        .company-details { font-size:12px; color:#555; display:flex; flex-wrap:wrap; justify-content:center; gap:10px 20px; margin-top:4px; }
-                        .company-details .label { color:#888; }
-                        .invoice-info { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px; padding:10px 15px; background:#f0f4ff; border-radius:8px; border-right:4px solid #1e2a5a; }
-                        .info-item { display:flex; flex-direction:column; align-items:center; text-align:center; }
-                        .info-item .label { font-size:11px; color:#6c757d; font-weight:bold; }
-                        .info-item .value { font-size:14px; font-weight:bold; color:#1e2a5a; margin-top:2px; }
-                        .customer-info { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; padding:8px 15px; background:#f8f9fa; border-radius:6px; margin-bottom:12px; border:1px solid #dee2e6; font-size:13px; }
-                        .customer-info .customer-label { color:#6c757d; font-weight:bold; }
-                        .customer-info .customer-value { color:#1e2a5a; font-weight:500; }
-                        .products-table { width:100%; border-collapse:collapse; margin:8px 0 12px 0; font-size:12px; }
-                        .products-table th { background:#1e2a5a; color:white; padding:8px 4px; border:1px solid #1e2a5a; text-align:center; font-size:11px; }
-                        .products-table td { border:1px solid #333; padding:6px 4px; text-align:center; font-size:11px; }
-                        .products-table tr:nth-child(even) { background:#f8f9fa; }
-                        .summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:8px 0 12px 0; padding:12px 15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6; }
-                        .summary-item { display:flex; flex-direction:column; align-items:center; padding:5px 0; }
-                        .summary-item .label { font-size:10px; color:#6c757d; font-weight:bold; }
-                        .summary-item .value { font-size:14px; font-weight:bold; color:#1e2a5a; margin-top:2px; }
-                        .summary-item .value.total { color:#28a745; font-size:16px; }
-                        .invoice-footer { margin-top:auto; padding-top:12px; border-top:2px solid #1e2a5a; display:flex; justify-content:space-between; align-items:center; gap:15px; }
-                        .footer-left { display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; }
-                        .footer-barcode-box { text-align:center; background:white; padding:5px 10px; border:1px dashed #999; border-radius:6px; }
-                        .footer-barcode-box svg { display:block; margin:0 auto; }
-                        .footer-barcode-label { font-size:10px; color:#666; margin-top:3px; direction:ltr; }
-                        .footer-text { text-align:center; font-size:11px; color:#666; margin-top:5px; }
-                        .footer-stamp { display:flex; flex-direction:column; align-items:center; }
-                        .footer-stamp img { max-width:100px; max-height:70px; object-fit:contain; margin-bottom:4px; }
-                        .footer-stamp .stamp-label { font-size:12px; font-weight:bold; color:#1e2a5a; }
-                        .footer-stamp .stamp-line { font-size:11px; color:#999; }
-                        @media print { body { padding:0; } .invoice-wrapper { padding:8px 12px 5px 12px; } .no-print { display:none !important; } }
-                        @page { size:A4; margin:8mm 6mm; }
-                    </style>
-                </head>
-                <body>
-                    <div class="invoice-wrapper">
-                        <div class="invoice-header">
-                            ${logoImage ? `<img src="${logoImage}" class="header-logo" alt="Logo" />` : ''}
-                            <div class="company-name-header">${companyName}</div>
-                            <div class="company-details">
-                                ${companyTaxNumber ? `<span><span class="label">الرقم الضريبي:</span> ${companyTaxNumber}</span>` : ''}
-                                ${companyPhone ? `<span><span class="label">الهاتف:</span> ${companyPhone}</span>` : ''}
-                                ${companyLocation ? `<span><span class="label">الموقع:</span> ${companyLocation}</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="invoice-info">
-                            <div class="info-item">
-                                <span class="label">رقم الطلب</span>
-                                <span class="value">#${order.OrderNo}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="label">التاريخ</span>
-                                <span class="value">${formatOrderDate(order.OrderDate)}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="label">معرف الطلب</span>
-                                <span class="value" style="font-size:11px;">${order.OrderID}</span>
-                            </div>
-                        </div>
-                        <div class="customer-info">
-                            <div><span class="customer-label">👤 الزبون:</span> <span class="customer-value">${order.OrderCustomer || order.OrderPhone || 'غير معرف'}</span></div>
-                            <div><span class="customer-label">📱 الهاتف:</span> <span class="customer-value">${order.OrderPhone || '-'}</span></div>
-                            <div style="grid-column:span 2;"><span class="customer-label">📍 الموقع:</span> <span class="customer-value">${order.OrderLocation || '-'}</span></div>
-                            <div><span class="customer-label">💳 طريقة الدفع:</span> <span class="customer-value">${paymentText}</span></div>
-                        </div>
-                        <table class="products-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:30px;">#</th>
-                                    <th style="width:80px;">الباركود</th>
-                                    <th style="text-align:right;">المنتج</th>
-                                    <th style="width:50px;">الكمية</th>
-                                    <th style="width:70px;">السعر</th>
-                                    <th style="width:80px;">الإجمالي</th>
-                                    <th style="width:70px;">الضريبة</th>
-                                    <th style="width:85px;">المجموع</th>
-                                </tr>
-                            </thead>
-                            <tbody>${productsHtml}</tbody>
-                        </table>
-                        <div class="summary-grid">
-                            <div class="summary-item">
-                                <span class="label">الكمية الكلية</span>
-                                <span class="value">${order.OrderTotQNT}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">إجمالي السعر</span>
-                                <span class="value">${order.OrderTotPxQ.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">إجمالي الضريبة</span>
-                                <span class="value">${order.OrderTotVat.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">المجموع + الضريبة</span>
-                                <span class="value">${order.OrderTotAMvVAT.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">التخفيض</span>
-                                <span class="value" style="color:#dc3545;">${order.OrderTotDiscount.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">بعد التخفيض</span>
-                                <span class="value" style="color:#28a745;">${order.OrderTotAMvDIS.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">التوصيل</span>
-                                <span class="value">${order.OrderDelivery.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label" style="color:black;">الإجمالي النهائي</span>
-                                <span class="value" style="color:black; font-size:16px;">${totalDelivery.toFixed(3)} ر.ع</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">المدفوع</span>
-                                <span class="value" style="color:#28a745;">${paidAmount.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">الباقي</span>
-                                <span class="value" style="color:${balanceAmount <= 0 ? '#28a745' : '#dc3545'};">${balanceAmount.toFixed(3)}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">طريقة الدفع</span>
-                                <span class="value">${paymentText}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">الحالة</span>
-                                <span class="value" style="color:${statusColor};">${statusText}</span>
-                            </div>
-                        </div>
-                        <div class="invoice-footer">
-                            <div class="footer-left">
-                                <div class="footer-barcode-box">
-                                    <svg id="orderBarcode"></svg>
-                                    <div class="footer-barcode-label">${order.OrderID}</div>
-                                </div>
-                                <div class="footer-text">شكراً لتعاملكم معنا 🌟</div>
-                            </div>
-                            <div class="footer-stamp">
-                                ${footerStamp ? `<img src="${footerStamp}" />` : ''}
-                                <div class="stamp-label">📌 ختم الشركة</div>
-                                <div class="stamp-line">....................</div>
-                            </div>
-                        </div>
+    const order = allOrders.find(o => o.OrderID === orderId);
+    if (!order) {
+        showToast('⚠️ الطلب غير موجود', 'warning');
+        return;
+    }
+ 
+    const logoImage = document.getElementById('compLogoPreview')?.src || '';
+    const footerStamp = document.getElementById('compFooterPreview')?.src || '';
+    const companyName = companyData.name || 'السوبر ماركت';
+    const companyTaxNumber = document.getElementById('compNO')?.value || '';
+    const companyPhone = document.getElementById('compPhone')?.value || '';
+    const companyLocation = document.getElementById('compLocationSearch')?.value
+                          || document.getElementById('compLocationLink')?.value || '';
+ 
+    const products = (order.OrderProducts || '').split(',').filter(x => x.trim());
+    const quantities = (order.OrderQNT || '').split(',').filter(x => x.trim());
+    const prices = (order.OrderPrice || '').split(',').filter(x => x.trim());
+    const amounts = (order.OrderPxQ || '').split(',').filter(x => x.trim());
+    const vats = (order.OrderVat || '').split(',').filter(x => x.trim());
+    const barcodes = (order.OrderBarcode || '').split(',').filter(x => x.trim());
+ 
+    let productsHtml = '';
+    const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
+    for (let i = 0; i < maxLen; i++) {
+        const qty = parseFloat(quantities[i] || 0);
+        const price = parseFloat(prices[i] || 0);
+        const amount = parseFloat(amounts[i] || 0);
+        const vat = parseFloat(vats[i] || 0);
+        const total = amount + vat;
+ 
+        productsHtml += `
+            <tr>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${i + 1}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${barcodes[i] || '-'}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:right;font-size:11px;">${products[i] || '-'}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${qty}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${price.toFixed(3)}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${amount.toFixed(3)}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;">${vat.toFixed(3)}</td>
+                <td style="border:1px solid #333;padding:6px 4px;text-align:center;font-size:11px;font-weight:bold;color:#1e2a5a;">${total.toFixed(3)}</td>
+            </tr>
+        `;
+    }
+ 
+    const totalDelivery = order.OrderTotalDelivery || 0;
+    const paidAmount = order.OrderAdvance || 0;
+    const balanceAmount = totalDelivery - paidAmount;
+ 
+    let statusText = order.OrderStatue;
+    let statusColor = '#6c757d';
+    if (order.OrderStatue === 'Pendding') { statusText = 'جديد'; statusColor = '#ffc107'; }
+    else if (order.OrderStatue === 'Confirmed') { statusText = 'مؤكد'; statusColor = '#17a2b8'; }
+    else if (order.OrderStatue === 'Delivered') { statusText = 'تم التوصيل'; statusColor = '#28a745'; }
+    else if (order.OrderStatue === 'Cancelled') { statusText = 'ملغي'; statusColor = '#dc3545'; }
+ 
+    const paymentMethods = {
+        'Cash': '💵 كاش', 'Visa': '💳 فيزا', 'BankT': '🏦 تحويل بنكي',
+        'Check': '📝 شيك', 'Debtor': '📋 آجل', 'Other': '🔄 أخرى'
+    };
+    const paymentText = paymentMethods[order.OrderWay] || order.OrderWay || '-';
+ 
+    const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>طلب ${order.OrderID}</title>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                * { margin:0; padding:0; box-sizing:border-box; }
+                body { font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif; background:white; direction:rtl; padding:0; }
+                .invoice-wrapper { max-width:210mm; margin:0 auto; background:white; padding:15px 20px 10px 20px; min-height:100vh; display:flex; flex-direction:column; }
+                .invoice-header { text-align:center; padding:0 0 10px 0; border-bottom:2px solid #1e2a5a; margin-bottom:12px; }
+                .header-logo { max-width:110px; max-height:110px; object-fit:contain; display:block; margin:0 auto 8px auto; border-radius:8px; }
+                .company-name-header { font-size:22px; font-weight:bold; color:#1e2a5a; margin-bottom:4px; }
+                .company-details { font-size:12px; color:#555; display:flex; flex-wrap:wrap; justify-content:center; gap:10px 20px; margin-top:4px; }
+                .company-details .label { color:#888; }
+                .invoice-info { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; padding:10px 15px; background:#f0f4ff; border-radius:8px; border-right:4px solid #1e2a5a; }
+                .info-item { display:flex; flex-direction:column; align-items:center; text-align:center; }
+                .info-item .label { font-size:11px; color:#6c757d; font-weight:bold; }
+                .info-item .value { font-size:14px; font-weight:bold; color:#1e2a5a; margin-top:2px; }
+                .customer-info { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; padding:8px 15px; background:#f8f9fa; border-radius:6px; margin-bottom:12px; border:1px solid #dee2e6; font-size:13px; }
+                .customer-info .customer-label { color:#6c757d; font-weight:bold; }
+                .customer-info .customer-value { color:#1e2a5a; font-weight:500; }
+                .products-table { width:100%; border-collapse:collapse; margin:8px 0 12px 0; font-size:12px; }
+                .products-table th { background:#1e2a5a; color:white; padding:8px 4px; border:1px solid #1e2a5a; text-align:center; font-size:11px; }
+                .products-table td { border:1px solid #333; padding:6px 4px; text-align:center; font-size:11px; }
+                .products-table tr:nth-child(even) { background:#f8f9fa; }
+                .summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:8px 0 12px 0; padding:12px 15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6; }
+                .summary-item { display:flex; flex-direction:column; align-items:center; padding:5px 0; }
+                .summary-item .label { font-size:10px; color:#6c757d; font-weight:bold; }
+                .summary-item .value { font-size:14px; font-weight:bold; color:#1e2a5a; margin-top:2px; }
+                .summary-item .value.total { color:#28a745; font-size:16px; }
+                .invoice-footer { margin-top:auto; padding-top:12px; border-top:2px solid #1e2a5a; display:flex; justify-content:space-between; align-items:center; gap:15px; }
+                .footer-left { display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; }
+                .footer-barcode-box { text-align:center; background:white; padding:5px 10px; border:1px dashed #999; border-radius:6px; }
+                .footer-barcode-box svg { display:block; margin:0 auto; }
+                .footer-barcode-label { font-size:10px; color:#666; margin-top:3px; direction:ltr; }
+                .footer-text { text-align:center; font-size:11px; color:#666; margin-top:5px; }
+                .footer-stamp { display:flex; flex-direction:column; align-items:center; }
+                .footer-stamp img { max-width:100px; max-height:70px; object-fit:contain; margin-bottom:4px; }
+                .footer-stamp .stamp-label { font-size:12px; font-weight:bold; color:#1e2a5a; }
+                .footer-stamp .stamp-line { font-size:11px; color:#999; }
+                @media print { body { padding:0; } .invoice-wrapper { padding:8px 12px 5px 12px; } .no-print { display:none !important; } }
+                @page { size:A4; margin:8mm 6mm; }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-wrapper">
+                <div class="invoice-header">
+                    ${logoImage ? `<img src="${logoImage}" class="header-logo" alt="Logo" />` : ''}
+                    <div class="company-name-header">${companyName}</div>
+                    <div class="company-details">
+                        ${companyTaxNumber ? `<span><span class="label">الرقم الضريبي:</span> ${companyTaxNumber}</span>` : ''}
+                        ${companyPhone ? `<span><span class="label">الهاتف:</span> ${companyPhone}</span>` : ''}
+                        ${companyLocation ? `<span><span class="label">الموقع:</span> ${companyLocation}</span>` : ''}
                     </div>
-                    <script>
-                        window.onload = function() {
-                            try {
-                                JsBarcode("#orderBarcode", "${order.OrderID}", {
-                                    format: "CODE128",
-                                    width: 1.5,
-                                    height: 45,
-                                    displayValue: false,
-                                    margin: 0
-                                });
-                            } catch(e) {
-                                console.error('Barcode error:', e);
-                            }
-                            setTimeout(function() {
-                                window.print();
-                            }, 500);
-                        };
-                    <\/script>
-                </body>
-                </html>
-            `;
-            
-            const printWindow = window.open('', '_blank', 'width=900,height=700');
-            if (printWindow) {
-                printWindow.document.write(printContent);
-                printWindow.document.close();
-            } else {
-                showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
-            }
-        }
+                </div>
+                <div class="invoice-info">
+                    <div class="info-item">
+                        <span class="label">رقم الطلب</span>
+                        <span class="value">${order.OrderID}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">التاريخ</span>
+                        <span class="value">${formatOrderDate(order.OrderDate)}</span>
+                    </div>
+                </div>
+                <div class="customer-info">
+                    <div><span class="customer-label">👤 الزبون:</span> <span class="customer-value">${order.OrderCustomer || order.OrderPhone || 'غير معرف'}</span></div>
+                    <div><span class="customer-label">📱 الهاتف:</span> <span class="customer-value">${order.OrderPhone || '-'}</span></div>
+                    <div style="grid-column:span 2;"><span class="customer-label">📍 الموقع:</span> <span class="customer-value">${order.OrderLocation || '-'}</span></div>
+                    <div><span class="customer-label">💳 طريقة الدفع:</span> <span class="customer-value">${paymentText}</span></div>
+                </div>
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">#</th>
+                            <th style="width:80px;">الباركود</th>
+                            <th style="text-align:right;">المنتج</th>
+                            <th style="width:50px;">الكمية</th>
+                            <th style="width:70px;">السعر</th>
+                            <th style="width:80px;">الإجمالي</th>
+                            <th style="width:70px;">الضريبة</th>
+                            <th style="width:85px;">المجموع</th>
+                        </tr>
+                    </thead>
+                    <tbody>${productsHtml}</tbody>
+                </table>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="label">الكمية الكلية</span>
+                        <span class="value">${order.OrderTotQNT}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">إجمالي السعر</span>
+                        <span class="value">${order.OrderTotPxQ.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">إجمالي الضريبة</span>
+                        <span class="value">${order.OrderTotVat.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">المجموع + الضريبة</span>
+                        <span class="value">${order.OrderTotAMvVAT.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">التخفيض</span>
+                        <span class="value" style="color:#dc3545;">${order.OrderTotDiscount.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">بعد التخفيض</span>
+                        <span class="value" style="color:#28a745;">${order.OrderTotAMvDIS.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">التوصيل</span>
+                        <span class="value">${order.OrderDelivery.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label" style="color:black;">الإجمالي النهائي</span>
+                        <span class="value" style="color:black; font-size:16px;">${totalDelivery.toFixed(3)} ر.ع</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">المدفوع</span>
+                        <span class="value" style="color:#28a745;">${paidAmount.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">الباقي</span>
+                        <span class="value" style="color:${balanceAmount <= 0 ? '#28a745' : '#dc3545'};">${balanceAmount.toFixed(3)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">طريقة الدفع</span>
+                        <span class="value">${paymentText}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">الحالة</span>
+                        <span class="value" style="color:${statusColor};">${statusText}</span>
+                    </div>
+                </div>
+                <div class="invoice-footer">
+                    <div class="footer-left">
+                        <div class="footer-barcode-box">
+                            <svg id="orderBarcode"></svg>
+                            <div class="footer-barcode-label">${order.OrderID}</div>
+                        </div>
+                        <div class="footer-text">شكراً لتعاملكم معنا 🌟</div>
+                    </div>
+                    <div class="footer-stamp">
+                        ${footerStamp ? `<img src="${footerStamp}" />` : ''}
+                        <div class="stamp-label">📌 ختم الشركة</div>
+                        <div class="stamp-line">....................</div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                window.onload = function() {
+                    try {
+                        JsBarcode("#orderBarcode", "${order.OrderID}", {
+                            format: "CODE128",
+                            width: 1.5,
+                            height: 45,
+                            displayValue: false,
+                            margin: 0
+                        });
+                    } catch(e) {
+                        console.error('Barcode error:', e);
+                    }
+                    setTimeout(function() {
+                        window.print();
+                    }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `;
+ 
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (printWindow) {
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+    } else {
+        showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+    }
+}
 
         document.addEventListener('DOMContentLoaded', function() {
             const loadOrdersBtn = document.getElementById('loadOrdersBtn');
@@ -6523,265 +6620,492 @@ if (scannerModalEl) {
         console.log('نظام إدارة المستخدمين والمنتجات والطلبات');
 
 
-// لوحة تحكم البيانات
+        // ===================================================================
+// ✅ دوال نافذة الفواتير
 // ===================================================================
-let dashboardData = [];
-let dashboardLightboxImages = [];
-let dashboardLightboxIndex = 0;
 
-async function loadDashboardData() {
-    const tbody = document.getElementById('dashboardTableBody');
+
+async function loadBills() {
+    const tbody = document.getElementById('billsTableBody');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span>جار التحميل...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span>جار التحميل...</td></tr>';
 
     try {
-        const params = new URLSearchParams({
-            action: 'getAll',
-            sheetId: DASHBOARD_SHEET_ID,
-            sheetName: DASHBOARD_SHEET_NAME,
-            t: Date.now()
-        });
-        const response = await fetch(`${DATA_DASHBOARD_URL}?${params.toString()}`);
-        const result = await response.json();
+        // ✅ استخدم رابط سكربت الفواتير
+        const url = `${BILLS_SCRIPT_URL}?action=getAllBills&t=${Date.now()}`;
+        const response = await fetch(url);
+        const result   = await response.json();
 
-        let rows = [];
-        if (Array.isArray(result)) rows = result;
-        else if (result.status === 'success' && result.data) rows = result.data;
-        else throw new Error(result.message || 'استجابة غير متوقعة');
-
-        dashboardData = rows;
-
-        if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">لا توجد سجلات</td></tr>';
-            document.getElementById('dashboardCountBadge').textContent = 'عدد السجلات: 0';
-            document.getElementById('totalDashboardRecords').textContent = '0';
-            return;
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'فشل تحميل الفواتير');
         }
 
-        const reversed = [...rows].reverse();
-        renderDashboardTable(reversed);
-        updateDashboardSummary(reversed);
-        document.getElementById('dashboardCountBadge').textContent = `عدد السجلات: ${rows.length}`;
+        allBills = (result.data || []).map(b => ({
+            BID:               b.BID || '',
+            BillDate:          b.BillDate || '',
+            BillNo:            b.BillNo || '',
+            BillCustomer:      b.BillCustomer || '',
+            BillPhone:         b.BillPhone || '',
+            BillLocation:      b.BillLocation || '',
+            BillProducts:      b.BillProducts || '',
+            BillQNT:           b.BillQNT || '',
+            BillPrice:         b.BillPrice || '',
+            BillPxQ:           b.BillPxQ || '',
+            BillVat:           b.BillVat || '',
+            BillAmount:        b.BillAmount || '',
+            BillTotQNT:        parseFloat(b.BillTotQNT)        || 0,
+            BillTotPxQ:        parseFloat(b.BillTotPxQ)        || 0,
+            BillTotVat:        parseFloat(b.BillTotVat)        || 0,
+            BillTotAMvVAT:     parseFloat(b.BillTotAMvVAT)     || 0,
+            BillTotDiscount:   parseFloat(b.BillTotDiscount)   || 0,
+            BillTotAMvDIS:     parseFloat(b.BillTotAMvDIS)     || 0,
+            BillAdvance:       parseFloat(b.BillAdvance)       || 0,
+            BillBalance:       parseFloat(b.BillBalance)       || 0,
+            BillWay:           b.BillWay || '',
+            BillStatue:        b.BillStatue || '',
+            BillDelivery:      parseFloat(b.BillDelivery)      || 0,
+            BillTotalDelivery: parseFloat(b.BillTotalDelivery) || 0,
+            BillBarcode:       b.BillBarcode || '',
+            BillSection:       b.BillSection || '',
+            OrderID:        b.OrderID || '',
+            BillCashair:    b.BillCashair || '',
+            BillCustomerID: b.BillCustomerID || ''
+        }));
 
-    } catch (error) {
-        console.error('❌ خطأ في جلب بيانات لوحة التحكم:', error);
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">فشل التحميل: ${error.message}</td></tr>`;
-        showToast('❌ فشل تحميل لوحة التحكم: ' + error.message, 'error');
+      allBills.sort((a, b) => String(b.BillNo).localeCompare(String(a.BillNo), undefined, { numeric: true }));
+
+        filteredBills = [...allBills];
+        renderBillsTable(filteredBills);
+        updateBillsSummary(filteredBills);
+        document.getElementById('billsCountBadge').textContent = `عدد الفواتير: ${allBills.length}`;
+
+    } catch (err) {
+        console.error('❌ خطأ في تحميل الفواتير:', err);
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            فشل التحميل: ${err.message}
+        </td></tr>`;
     }
 }
 
-function renderDashboardTable(rows) {
-    const tbody = document.getElementById('dashboardTableBody');
+function renderBillsTable(bills) {
+    const tbody = document.getElementById('billsTableBody');
     tbody.innerHTML = '';
-    
-    rows.forEach((row, index) => {
-        const timestamp = row['Timestamp'] || row['newDate'] || '-';
-        const locationName = row['LocationName'] || row['locationName'] || row['المنطقة'] || '-';
-        const latitude = row['latitude'] || '';
-        const longitude = row['longitude'] || '';
-        const linkLocation = row['linkLocation'] || '';
-        const imageData = row['imageData'] || '';
-        const phone = row['Phone'] || row['phone'] || '';
-        
-        const coords = (latitude && longitude) ? `${latitude}, ${longitude}` : '-';
-        
-        // حساب عدد الصور
-        let imageCount = 0;
-        ['imageData', 'imageData2', 'imageData3', 'imageData4', 'imageData5'].forEach(k => {
-            if (row[k] && row[k].length > 100) imageCount++;
-        });
-        
-        const mapLink = linkLocation && linkLocation.includes('google.com/maps')
-            ? linkLocation
-            : (latitude && longitude ? `https://www.google.com/maps?q=${latitude},${longitude}` : '');
-        
+
+    if (bills.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">لا توجد فواتير</td></tr>';
+        return;
+    }
+
+    bills.forEach((b, idx) => {
+        const st = getBillStatusInfo(b.BillStatue);
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${timestamp}</td>
-            <td>${locationName}</td>
-            <td style="direction:ltr;">${phone ? phone : '-'}</td>
-            <td style="direction:ltr; font-size:0.75rem;">${coords}</td>
-            <td>${mapLink ? `<a href="${mapLink}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-map-marker-alt"></i> فتح</a>` : '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-info view-dashboard-images-btn" data-index="${index}">
-                    <i class="fas fa-images"></i> ${imageCount}
-                </button>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-danger delete-dashboard-row-btn" data-index="${index}">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <td>${idx + 1}</td>
+            <td><strong>${b.BillNo}</strong></td>
+            <td>${b.OrderID || '-'}</td>
+            <td>${formatOrderDate(b.BillDate)}</td>
+            <td style="direction:ltr;">${b.BillPhone}</td>
+            <td>${b.BillCustomer || '-'}</td>
+            <td>${b.BillTotPxQ.toFixed(3)}</td>
+           <td>${b.BillTotVat.toFixed(3)}</td>
+            <td>${b.BillDelivery.toFixed(3)}</td>
+            <td style="font-weight:bold; color:#1e2a5a;">${b.BillTotalDelivery.toFixed(3)}</td>
+            <td><span class="badge ${st.badge}">${st.text}</span></td>
+            <td class="action-btns">
+                <button class="btn btn-info btn-sm" onclick="viewBillDetails('${b.BillNo}')" title="عرض"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-primary btn-sm" onclick="printBill('${b.BillNo}')" title="طباعة"><i class="fas fa-print"></i></button>
+                <button class="btn btn-warning btn-sm" onclick="editBill('${b.BillNo}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteBill('${b.BillNo}')" title="حذف"><i class="fas fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
     });
-    
-    // ربط الأحداث
-    tbody.querySelectorAll('.view-dashboard-images-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            showDashboardImages(dashboardData.length - 1 - idx);
-        });
-    });
-    
-    tbody.querySelectorAll('.delete-dashboard-row-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.index);
-            deleteDashboardRow(dashboardData.length - 1 - idx);
-        });
-    });
 }
 
-function updateDashboardSummary(rows) {
-    document.getElementById('totalDashboardRecords').textContent = rows.length;
+function updateBillsSummary(bills) {
+    let totalPrice = 0, totalVat = 0, totalAmount = 0;
+    bills.forEach(b => {
+        totalPrice += b.BillTotPxQ || 0;
+        totalVat += b.BillTotVat || 0;
+        totalAmount += b.BillTotalDelivery || 0;
+    });
+    document.getElementById('totalBills').textContent = bills.length;
+    document.getElementById('totalBillsPrice').textContent = totalPrice.toFixed(3);
+    document.getElementById('totalBillsVat').textContent = totalVat.toFixed(3);
+    document.getElementById('totalBillsAmount').textContent = totalAmount.toFixed(3);
 }
 
-function getDashboardImageSrc(imageData) {
-    if (imageData && imageData.length > 100) {
-        let src = imageData;
-        if (!src.startsWith('data:image')) {
-            src = `data:image/jpeg;base64,${src}`;
+function applyBillFilters() {
+    const search = (document.getElementById('searchBillInput').value || '').trim().toLowerCase();
+    const status = document.getElementById('filterBillStatus').value || '';
+
+    filteredBills = allBills.filter(b => {
+        if (search) {
+            const no = String(b.BillNo).toLowerCase();
+            const phone = String(b.BillPhone).toLowerCase();
+            const customer = String(b.BillCustomer).toLowerCase();
+            const orderId = String(b.OrderID).toLowerCase();
+            if (!no.includes(search) && !phone.includes(search) &&
+                !customer.includes(search) && !orderId.includes(search)) return false;
         }
-        return src;
-    }
-    return null;
+        if (status && b.BillStatue !== status) return false;
+        return true;
+    });
+
+    renderBillsTable(filteredBills);
+    updateBillsSummary(filteredBills);
 }
 
-function showDashboardImages(originalIndex) {
-    const row = dashboardData[originalIndex];
-    if (!row) return;
-    
-    const images = [];
-    ['imageData', 'imageData2', 'imageData3', 'imageData4', 'imageData5'].forEach((key, i) => {
-        const src = getDashboardImageSrc(row[key]);
-        if (src) images.push({ src, label: `صورة ${i + 1}` });
-    });
-    
-    if (images.length === 0) {
-        showToast('⚠️ لا توجد صور لهذا السجل', 'warning');
-        return;
+function clearBillFilters() {
+    document.getElementById('searchBillInput').value = '';
+    document.getElementById('filterBillStatus').value = '';
+    applyBillFilters();
+}
+
+function viewBillDetails(billNo) {
+    const bill = allBills.find(b => String(b.BillNo) === String(billNo));
+    if (!bill) return;
+
+    const products = (bill.BillProducts || '').split(',').filter(x => x.trim());
+    const quantities = (bill.BillQNT || '').split(',').filter(x => x.trim());
+    const prices = (bill.BillPrice || '').split(',').filter(x => x.trim());
+    const amounts = (bill.BillPxQ || '').split(',').filter(x => x.trim());
+    const vats = (bill.BillVat || '').split(',').filter(x => x.trim());
+    const barcodes = (bill.BillBarcode || '').split(',').filter(x => x.trim());
+
+    let productsHtml = `<table class="table table-bordered table-sm" style="font-size:0.85rem;">
+        <thead><tr><th>#</th><th>الباركود</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>الضريبة</th></tr></thead><tbody>`;
+
+    const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
+    for (let i = 0; i < maxLen; i++) {
+        productsHtml += `<tr>
+            <td>${i + 1}</td>
+            <td>${barcodes[i] || '-'}</td>
+            <td>${products[i] || '-'}</td>
+            <td>${quantities[i] || 0}</td>
+            <td>${parseFloat(prices[i] || 0).toFixed(3)}</td>
+            <td>${parseFloat(amounts[i] || 0).toFixed(3)}</td>
+            <td>${parseFloat(vats[i] || 0).toFixed(3)}</td>
+        </tr>`;
     }
-    
-    dashboardLightboxImages = images.map(i => i.src);
-    dashboardLightboxIndex = 0;
-    
-    // إنشاء مودال عرض الصور
-    const oldModal = document.getElementById('dashboardImagesModal');
-    if (oldModal) oldModal.remove();
-    
+    productsHtml += '</tbody></table>';
+
     const modal = document.createElement('div');
-    modal.id = 'dashboardImagesModal';
-    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; z-index:100200; padding:20px;';
-    
-    let imagesHtml = '<div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center; padding:20px;">';
-    images.forEach(img => {
-        imagesHtml += `
-            <div style="text-align:center;">
-                <img src="${img.src}" 
-                     onclick="openDashboardLightbox(${images.indexOf(img)})"
-                     style="max-width:300px; max-height:300px; border-radius:12px; border:2px solid #fff; object-fit:contain; background:white; padding:5px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.4);" />
-                <div style="color:white; margin-top:6px; font-size:0.8rem;">${img.label}</div>
-            </div>
-        `;
-    });
-    imagesHtml += '</div>';
-    
+    modal.id = 'billDetailsModal';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; z-index:100100; padding:20px;';
     modal.innerHTML = `
-        <div style="background:white; border-radius:16px; width:95%; max-width:900px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-            <div style="background:linear-gradient(135deg,#1e2a5a,#2a3a7a); color:white; padding:14px 22px; display:flex; justify-content:space-between; align-items:center;">
-                <h6 style="margin:0;"><i class="fas fa-images me-2"></i>صور السجل - ${row['LocationName'] || row['locationName'] || '-'}</h6>
-                <button onclick="document.getElementById('dashboardImagesModal').remove()" style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer;">&times;</button>
+        <div style="background:white; border-radius:18px; width:95%; max-width:950px; max-height:92vh; overflow:hidden; display:flex; flex-direction:column;">
+            <div style="background:linear-gradient(135deg,#1e2a5a,#2a3a7a); color:white; padding:15px 22px; display:flex; justify-content:space-between; align-items:center;">
+                <h5 style="margin:0;"><i class="fas fa-file-invoice me-2"></i>تفاصيل الفاتورة ${bill.BillNo}</h5>
+                <button onclick="document.getElementById('billDetailsModal').remove()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
-            <div style="overflow-y:auto; flex:1; background:#f4f6f9;">${imagesHtml}</div>
-            <div style="padding:12px; text-align:center; background:white; border-top:1px solid #dee2e6;">
-                <button onclick="document.getElementById('dashboardImagesModal').remove()" class="btn btn-secondary btn-sm" style="padding:8px 24px;">
-                    <i class="fas fa-times me-1"></i> إغلاق
-                </button>
+            <div style="padding:20px; overflow-y:auto; flex:1; background:#f8f9fa;">
+                <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div><strong>رقم الفاتورة:</strong> ${bill.BillNo}</div>
+                        <div><strong>التاريخ:</strong> ${bill.BillDate}</div>
+                        <div><strong>الهاتف:</strong> ${bill.BillPhone}</div>
+                        <div><strong>العميل:</strong> ${bill.BillCustomer || '-'}</div>
+                        <div><strong>الموقع:</strong> ${bill.BillLocation || '-'}</div>
+                        <div><strong>طريقة الدفع:</strong> ${bill.BillWay || '-'}</div>
+                    </div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <h6 style="margin-bottom:10px; color:#1e2a5a; border-bottom:2px solid #1e2a5a; padding-bottom:8px;">📦 المنتجات</h6>
+                    <div style="overflow-x:auto;">${productsHtml}</div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:10px;">
+                    <h6 style="margin-bottom:12px; color:#1e2a5a; border-bottom:2px solid #1e2a5a; padding-bottom:8px;">💰 ملخص الحساب</h6>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;"><small>إجمالي السعر</small><div style="font-weight:bold;">${bill.BillTotPxQ.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;"><small>إجمالي الضريبة</small><div style="font-weight:bold;">${bill.BillTotVat.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;"><small>المجموع + الضريبة</small><div style="font-weight:bold;">${bill.BillTotAMvVAT.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#fff3cd; border-radius:8px;"><small>التخفيض</small><div style="font-weight:bold; color:#dc3545;">${bill.BillTotDiscount.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#d4edda; border-radius:8px;"><small>بعد التخفيض</small><div style="font-weight:bold; color:#155724;">${bill.BillTotAMvDIS.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;"><small>التوصيل</small><div style="font-weight:bold;">${bill.BillDelivery.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;"><small>المدفوع</small><div style="font-weight:bold; color:#28a745;">${bill.BillAdvance.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;"><small>الباقي</small><div style="font-weight:bold; color:${bill.BillBalance <= 0 ? '#28a745' : '#dc3545'};">${bill.BillBalance.toFixed(3)}</div></div>
+                        <div style="text-align:center; padding:10px; background:linear-gradient(135deg,#1e2a5a,#2a3a7a); border-radius:8px; color:white;"><small>الإجمالي النهائي</small><div style="font-weight:bold; font-size:1.2rem;">${bill.BillTotalDelivery.toFixed(3)}</div></div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:15px; text-align:center; border-top:1px solid #dee2e6;">
+                <button onclick="document.getElementById('billDetailsModal').remove()" class="btn btn-secondary">إغلاق</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
 }
 
-function openDashboardLightbox(index) {
-    dashboardLightboxIndex = index;
-    
-    const oldLightbox = document.getElementById('dashboardLightbox');
-    if (oldLightbox) oldLightbox.remove();
-    
-    const lightbox = document.createElement('div');
-    lightbox.id = 'dashboardLightbox';
-    lightbox.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.95); display:flex; justify-content:center; align-items:center; z-index:100300; cursor:zoom-out;';
-    lightbox.innerHTML = `
-        <button onclick="event.stopPropagation(); document.getElementById('dashboardLightbox').remove()" 
-                style="position:fixed; top:20px; right:20px; background:rgba(255,255,255,0.2); border:none; color:white; font-size:2rem; width:50px; height:50px; border-radius:50%; cursor:pointer; z-index:100301;">&times;</button>
-        <button onclick="event.stopPropagation(); navigateDashboardLightbox(-1)" 
-                style="position:fixed; top:50%; left:20px; transform:translateY(-50%); background:rgba(255,255,255,0.2); border:none; color:white; font-size:2rem; width:50px; height:50px; border-radius:50%; cursor:pointer; z-index:100301;">‹</button>
-        <button onclick="event.stopPropagation(); navigateDashboardLightbox(1)" 
-                style="position:fixed; top:50%; right:20px; transform:translateY(-50%); background:rgba(255,255,255,0.2); border:none; color:white; font-size:2rem; width:50px; height:50px; border-radius:50%; cursor:pointer; z-index:100301;">›</button>
-        <img id="dashboardLightboxImg" src="${dashboardLightboxImages[dashboardLightboxIndex]}" 
-             style="max-width:95vw; max-height:95vh; object-fit:contain; border-radius:12px; cursor:default;" 
-             onclick="event.stopPropagation()" />
-        <div style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.6); padding:8px 20px; border-radius:30px; font-size:0.9rem; z-index:100301;">
-            ${dashboardLightboxIndex + 1} / ${dashboardLightboxImages.length}
-        </div>
-    `;
-    lightbox.addEventListener('click', () => lightbox.remove());
-    document.body.appendChild(lightbox);
+
+function editBill(billNo) {
+    const bill = allBills.find(b => String(b.BillNo) === String(billNo));
+    if (!bill) { showToast('⚠️ الفاتورة غير موجودة', 'warning'); return; }
+    document.getElementById('editBillModal')?.remove();
+
+    const esc = v => String(v ?? '').replace(/"/g, '&quot;');
+    const ways = { Cash: '💵 كاش', Visa: '💳 فيزا', BankT: '🏦 تحويل بنكي', Check: '📝 شيك', Debtor: '📋 آجل', Other: '🔄 أخرى' };
+    const total = (bill.BillTotalDelivery || 0).toFixed(3);
+
+    const modal = document.createElement('div');
+    modal.id = 'editBillModal';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; z-index:100101; padding:20px;';
+    modal.innerHTML = `
+        <div style="background:white; border-radius:18px; width:95%; max-width:520px; max-height:92vh; overflow:hidden; display:flex; flex-direction:column;">
+            <div style="background:linear-gradient(135deg,#1e2a5a,#2a3a7a); color:white; padding:15px 22px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                <h5 style="margin:0;"><i class="fas fa-edit me-2"></i>تعديل الفاتورة ${bill.BillNo}</h5>
+                <button type="button" onclick="document.getElementById('editBillModal').remove()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+
+            <div style="padding:20px; overflow-y:auto; flex:1; min-height:0;">
+                <div style="display:grid; gap:12px;">
+                    <div><label>اسم العميل <span style="color:red">*</span></label><input id="editBillCustomer" class="form-control" value="${esc(bill.BillCustomer)}"></div>
+                    <div><label>رقم بطاقة الزبون <span style="color:red">*</span></label><input id="editBillCustomerID" class="form-control" value="${esc(bill.BillCustomerID)}"></div>
+                    <div><label>الهاتف</label><input id="editBillPhone" class="form-control" value="${esc(bill.BillPhone)}"></div>
+                    <div><label>الموقع</label><input id="editBillLocation" class="form-control" value="${esc(bill.BillLocation)}"></div>
+                     <div><label>الكاشير</label><input id="editBillCashair" class="form-control" value="${esc(bill.BillCashair)} " readonly></div>
+                    <div><label>طريقة الدفع</label>
+                        <select id="editBillWay" class="form-select">
+                            ${Object.entries(ways).map(([k, v]) => `<option value="${k}" ${bill.BillWay === k ? 'selected' : ''}>${v}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div><label>المدفوع (من أصل ${total})</label>
+                        <div style="display:flex; gap:8px;">
+                            <input id="editBillAdvance" type="number" step="0.001" min="0" class="form-control" value="${bill.BillAdvance}" style="flex:1;">
+                            <button type="button" class="btn btn-success" style="white-space:nowrap;"
+                                    onclick="document.getElementById('editBillAdvance').value = '${total}'">
+                                <i class="fas fa-check-double me-1"></i>دفع بالكامل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="editBillError" style="display:none; color:#dc3545; font-weight:bold; text-align:center; margin-top:12px;"></div>
+            </div>
+
+            <div style="padding:14px 20px; border-top:1px solid #dee2e6; display:flex; gap:12px; justify-content:center; align-items:center; flex-shrink:0; background:white;">
+                <button type="button" id="saveBillEditBtn" class="btn btn-success" style="min-width:120px;"><i class="fas fa-save me-1"></i>حفظ</button>
+                <button type="button" onclick="document.getElementById('editBillModal').remove()" class="btn btn-secondary" style="min-width:120px;"><i class="fas fa-times me-1"></i>إلغاء</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('saveBillEditBtn').addEventListener('click', () => saveBillEdit(billNo));
 }
 
-function navigateDashboardLightbox(dir) {
-    dashboardLightboxIndex = (dashboardLightboxIndex + dir + dashboardLightboxImages.length) % dashboardLightboxImages.length;
-    const img = document.getElementById('dashboardLightboxImg');
-    if (img) img.src = dashboardLightboxImages[dashboardLightboxIndex];
-    const counter = document.querySelector('#dashboardLightbox > div:last-child');
-    if (counter) counter.textContent = `${dashboardLightboxIndex + 1} / ${dashboardLightboxImages.length}`;
-}
-
-async function deleteDashboardRow(originalIndex) {
-    const row = dashboardData[originalIndex];
-    if (!row) return;
-    if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
-
-    showLoading();
-    const body = new URLSearchParams({
-        action: 'delete',
-        sheetId: DASHBOARD_SHEET_ID,
-        sheetName: DASHBOARD_SHEET_NAME,
-        newDate: row.newDate || '',
-        _rowNumber: row._rowNumber || ''
-    });
+async function saveBillEdit(billNo) {
+    const errBox = document.getElementById('editBillError');
+    const showErr = msg => { if (errBox) { errBox.textContent = '⚠️ ' + msg; errBox.style.display = 'block'; } };
+    if (errBox) errBox.style.display = 'none';
 
     try {
-        const res = await fetch(DATA_DASHBOARD_URL, { method: 'POST', body });
-        const result = await res.json();
-        hideLoading();
+        const bill = allBills.find(b => String(b.BillNo) === String(billNo));
+        if (!bill) { showErr('الفاتورة غير موجودة'); return; }
 
-        if (result.status === 'success') {
-            showToast('✅ تم حذف السجل', 'success');
-            loadDashboardData();
-        } else {
-            showToast('❌ ' + (result.message || 'فشل الحذف'), 'error');
-        }
+        const val = id => (document.getElementById(id)?.value || '').trim();
+
+        const customer = val('editBillCustomer');
+        const customerId = val('editBillCustomerID');
+        if (!customer)   { showErr('اسم الزبون مطلوب');        document.getElementById('editBillCustomer').focus();   return; }
+        if (!customerId) { showErr('رقم بطاقة الزبون مطلوب');  document.getElementById('editBillCustomerID').focus(); return; }
+
+        const advance = parseFloat(val('editBillAdvance')) || 0;
+        const total = bill.BillTotalDelivery || 0;
+
+        const payload = {
+            action: 'updateBill',
+            BillNo: billNo,
+            BillCustomer: customer,
+            BillCustomerID: customerId,
+            BillCashair: val('editBillCashair'),
+            BillPhone: val('editBillPhone'),
+            BillLocation: val('editBillLocation'),
+            BillWay: val('editBillWay'),
+            BillAdvance: advance,
+            BillBalance: total - advance,
+            BillStatue: computePaymentStatus(total, advance)
+        };
+
+        showLoading();
+        const res = await fetch(BILLS_SCRIPT_URL, { method: 'POST', mode: 'cors', body: JSON.stringify(payload) });
+        const json = await res.json();
+        hideLoading();
+        if (json.status !== 'success') throw new Error(json.message || 'فشل التعديل');
+
+        Object.assign(bill, payload);
+        delete bill.action;
+        applyBillFilters();
+        document.getElementById('editBillModal')?.remove();
+        showToast('✅ تم تعديل الفاتورة', 'success');
     } catch (err) {
-        // احتياط: إذا منع المتصفح قراءة الرد، ننتظر ثم نعيد التحميل
-        console.warn('تعذر قراءة الرد، سيتم التحقق بإعادة التحميل', err);
-        setTimeout(() => {
-            hideLoading();
-            loadDashboardData();
-        }, 6000);
+        hideLoading();
+        console.error('saveBillEdit error:', err);
+        showErr(err.message || 'حدث خطأ غير متوقع');
     }
 }
 
-// ربط زر التحديث
-document.addEventListener('DOMContentLoaded', function() {
-    const loadDashboardBtn = document.getElementById('loadDashboardBtn');
-    if (loadDashboardBtn) {
-        loadDashboardBtn.addEventListener('click', loadDashboardData);
+function printBill(billNo) {
+    const bill = allBills.find(b => String(b.BillNo) === String(billNo));
+    if (!bill) {
+        showToast('⚠️ الفاتورة غير موجودة', 'warning');
+        return;
     }
-});
+ 
+    const logoImage = document.getElementById('compLogoPreview')?.src || '';
+    const footerStamp = document.getElementById('compFooterPreview')?.src || '';
+    const companyName = companyData.name || 'السوبر ماركت';
+    const companyTaxNumber = document.getElementById('compNO')?.value || '';
+    const companyPhone = document.getElementById('compPhone')?.value || '';
+    const companyLocation = document.getElementById('compLocationSearch')?.value || '';
+ 
+    const products    = (bill.BillProducts || '').split(',').filter(x => x.trim());
+    const quantities  = (bill.BillQNT || '').split(',').filter(x => x.trim());
+    const prices      = (bill.BillPrice || '').split(',').filter(x => x.trim());
+    const amounts     = (bill.BillPxQ || '').split(',').filter(x => x.trim());
+    const vats        = (bill.BillVat || '').split(',').filter(x => x.trim());
+    const barcodes    = (bill.BillBarcode || '').split(',').filter(x => x.trim());
+ 
+    let productsHtml = '';
+    const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
+    for (let i = 0; i < maxLen; i++) {
+        const qty    = parseFloat(quantities[i] || 0);
+        const price  = parseFloat(prices[i] || 0);
+        const amount = parseFloat(amounts[i] || 0);
+        const vat    = parseFloat(vats[i] || 0);
+        productsHtml += `<tr>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${i + 1}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${barcodes[i] || '-'}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:right;">${products[i] || '-'}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${qty}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${price.toFixed(3)}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${amount.toFixed(3)}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:center;">${vat.toFixed(3)}</td>
+            <td style="border:1px solid #333;padding:6px;text-align:center;font-weight:bold;">${(amount + vat).toFixed(3)}</td>
+        </tr>`;
+    }
+ 
+    // حالة الدفع: غير مدفوع - مدفوع جزئي - مدفوع كامل
+    const stInfo = getBillStatusInfo(bill.BillStatue);
+    let statusText = stInfo.text, statusColor = stInfo.color;
+ 
+    const paymentMethods = {
+        'Cash': '💵 كاش', 'Visa': '💳 فيزا', 'BankT': '🏦 تحويل بنكي',
+        'Check': '📝 شيك', 'Debtor': '📋 آجل', 'Other': '🔄 أخرى'
+    };
+    const paymentText = paymentMethods[bill.BillWay] || bill.BillWay || '-';
+ 
+    const printContent = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+    <title>فاتورة ${bill.BillNo}</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Tahoma,Arial,sans-serif; padding:15px; direction:rtl; }
+        .header { text-align:center; border-bottom:2px solid #1e2a5a; padding-bottom:10px; margin-bottom:15px; }
+        .header img { max-width:100px; max-height:100px; }
+        .header h2 { color:#1e2a5a; margin:8px 0; }
+        .header p { color:#666; font-size:12px; }
+        .info { background:#f0f4ff; padding:10px; border-radius:8px; border-right:4px solid #1e2a5a; margin-bottom:12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; font-size:13px; }
+        table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+        th { background:#1e2a5a; color:white; padding:8px; font-size:12px; }
+        .summary { background:#f8f9fa; padding:12px; border-radius:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; font-size:13px; }
+        .summary-item { text-align:center; padding:6px; }
+        .summary-item small { display:block; color:#666; margin-bottom:3px; }
+        .summary-item strong { color:#1e2a5a; }
+        .footer { border-top:2px solid #1e2a5a; padding-top:10px; text-align:center; }
+        .footer img { max-width:100px; max-height:70px; }
+        @media print { body { padding:0; } .no-print { display:none !important; } }
+        @page { size:A4; margin:8mm; }
+    </style></head><body>
+        <div class="header">
+            ${logoImage ? `<img src="${logoImage}" />` : ''}
+            <h2>${companyName}</h2>
+            <p>
+                ${companyTaxNumber ? 'الرقم الضريبي: ' + companyTaxNumber + ' | ' : ''}
+                ${companyPhone ? 'الهاتف: ' + companyPhone : ''}
+                ${companyLocation ? ' | ' + companyLocation : ''}
+            </p>
+        </div>
+        <div class="info">
+            <div><strong>رقم الفاتورة:</strong> ${bill.BillNo}</div>
+            <div><strong>التاريخ:</strong> ${bill.BillDate}</div>
+            <div><strong>الهاتف:</strong> ${bill.BillPhone}</div>
+            <div><strong>العميل:</strong> ${bill.BillCustomer || '-'}</div>
+            <div><strong>الموقع:</strong> ${bill.BillLocation || '-'}</div>
+            <div><strong>طريقة الدفع:</strong> ${paymentText}</div>
+        </div>
+        <table>
+            <thead><tr>
+                <th>#</th><th>الباركود</th><th style="text-align:right;">المنتج</th>
+                <th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>الضريبة</th><th>المجموع</th>
+            </tr></thead>
+            <tbody>${productsHtml}</tbody>
+        </table>
+        <div class="summary">
+            <div class="summary-item"><small>إجمالي السعر</small><strong>${bill.BillTotPxQ.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>إجمالي الضريبة</small><strong>${bill.BillTotVat.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>المجموع + الضريبة</small><strong>${bill.BillTotAMvVAT.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>التخفيض</small><strong style="color:#dc3545;">${bill.BillTotDiscount.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>بعد التخفيض</small><strong style="color:#28a745;">${bill.BillTotAMvDIS.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>الكمية الكلية</small><strong>${bill.BillTotQNT || 0}</strong></div>
+            <div class="summary-item"><small>التوصيل</small><strong>${bill.BillDelivery.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>الإجمالي النهائي</small><strong style="color:#1e2a5a; font-size:16px;">${bill.BillTotalDelivery.toFixed(3)} ر.ع</strong></div>
+            <div class="summary-item"><small>المدفوع</small><strong style="color:#28a745;">${bill.BillAdvance.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>الباقي</small><strong style="color:${bill.BillBalance <= 0 ? '#28a745' : '#dc3545'};">${bill.BillBalance.toFixed(3)}</strong></div>
+            <div class="summary-item"><small>طريقة الدفع</small><strong>${paymentText}</strong></div>
+            <div class="summary-item"><small>حالة الدفع</small><strong style="color:${statusColor};">${statusText}</strong></div>
+        </div>
+        <div class="footer">
+            ${footerStamp ? `<img src="${footerStamp}" />` : ''}
+            <p style="font-size:12px; color:#666; margin-top:5px;">شكراً لتعاملكم معنا 🌟</p>
+        </div>
+        <div style="text-align:center; margin-top:15px;" class="no-print">
+            <button onclick="window.print()" style="padding:8px 24px; background:#1e2a5a; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; margin-left:10px;">🖨️ طباعة</button>
+            <button onclick="window.close()" style="padding:8px 24px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">✕ إغلاق</button>
+        </div>
+        <script>
+            window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+        <\/script>
+    </body></html>`;
+ 
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (printWindow) {
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+    } else {
+        showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+    }
+}
+
+function deleteBill(billNo) {
+    const bill = allBills.find(b => String(b.BillNo) === String(billNo));
+    if (!bill) { showToast('⚠️ الفاتورة غير موجودة', 'warning'); return; }
+
+    showConfirmDialog(`هل أنت متأكد من حذف الفاتورة ${bill.BillNo}؟`, async function(confirmed) {
+        if (!confirmed) return;
+        showLoading();
+        try {
+            // ✅ استخدم سكربت الفواتير
+            const url = `${BILLS_SCRIPT_URL}?action=deleteBill&BillNo=${encodeURIComponent(billNo)}`;
+            const response = await fetch(url);
+            const result   = await response.json();
+            hideLoading();
+
+            if (result.status === 'success') {
+                allBills = allBills.filter(b => String(b.BillNo) !== String(billNo));
+                filteredBills = [...allBills];
+                renderBillsTable(filteredBills);
+                updateBillsSummary(filteredBills);
+                document.getElementById('billsCountBadge').textContent = `عدد الفواتير: ${allBills.length}`;
+                showToast(`✅ تم حذف الفاتورة ${bill.BillNo}`, 'success');
+            } else {
+                showToast('❌ ' + (result.message || 'فشل الحذف'), 'error');
+            }
+        } catch (err) {
+            hideLoading();
+            console.error(err);
+            showToast('❌ فشل الحذف', 'error');
+        }
+    });
+}
 
     </script>
     <script>
