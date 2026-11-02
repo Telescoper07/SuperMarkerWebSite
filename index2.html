@@ -653,6 +653,19 @@
         }
 
         #loadMoreProductsContainer { display: flex; align-items: center; }
+        .img-wrap { position: relative; display: inline-block; align-self: center; }
+.img-x {
+    display: none;
+    position: absolute; top: -7px; right: -7px;
+    width: 18px; height: 18px; padding: 0;
+    border: none; border-radius: 50%;
+    background: #dc3545; color: white;
+    font-size: 14px; line-height: 1; cursor: pointer;
+    align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.img-x:hover { background: #a71d2a; }
+.img-wrap img[src]:not([src=""]) ~ .img-x { display: flex; }
     </style>
 </head>
 <div id="tempQRCode" style="position:absolute;left:-9999px;top:-9999px;"></div>
@@ -1432,6 +1445,8 @@
         let filteredBills = [];
 
 
+
+
         document.getElementById('splashLogo').src = SPLASH_LOGO_URL;
         document.getElementById('loginLogo').src = LOGIN_LOGO_URL;
         document.getElementById('welcomeLogo').src = WELCOME_LOGO_URL;
@@ -1447,6 +1462,18 @@
             document.getElementById('splashScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.add('show');
         });
+
+function restoreSavedPhone() {
+    try {
+        const saved = localStorage.getItem('savedLoginPhone');
+        if (saved) {
+            document.getElementById('loginPhone').value = saved;
+            document.getElementById('loginPassword').focus();
+        }
+    } catch (e) { /* التخزين المحلي غير متاح */ }
+}
+restoreSavedPhone();
+
 
         // ======================== تعريف البطاقات ========================
 const WINDOWS = [
@@ -1749,6 +1776,7 @@ params.append('_t', Date.now());
                     }
                 })
                 .then(usersResult => {
+                    try { localStorage.setItem('savedLoginPhone', phone); } catch (e) {}
                     allUsers = usersResult.data || [];
                     document.getElementById('loginScreen').classList.remove('show');
                     document.getElementById('welcomeScreen').classList.add('show');
@@ -2496,22 +2524,31 @@ window.onload=function(){
                     <td><span class="text-muted small">حساب تلقائي</span></td>
                     <td><span class="text-muted small">حساب تلقائي</span></td>
                     <td><input type="checkbox" id="inputProdShow" class="form-check-input" checked /></td>
-                    <td colspan="3">
-                        <div style="display:flex; flex-direction:row; gap:6px; align-items:flex-start;">
-                            <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
-                                <input type="file" accept="image/*" class="form-control form-control-sm" id="inputImage1" onchange="handleProductImage(this, 'previewImage1')" style="font-size:0.65rem; padding:2px;" />
-                                <img id="previewImage1" style="max-width:50px; max-height:50px; display:none; border:1px solid #ddd; border-radius:4px; align-self:center;" />
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
-                                <input type="file" accept="image/*" class="form-control form-control-sm" id="inputImage2" onchange="handleProductImage(this, 'previewImage2')" style="font-size:0.65rem; padding:2px;" />
-                                <img id="previewImage2" style="max-width:50px; max-height:50px; display:none; border:1px solid #ddd; border-radius:4px; align-self:center;" />
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
-                                <input type="file" accept="image/*" class="form-control form-control-sm" id="inputImage3" onchange="handleProductImage(this, 'previewImage3')" style="font-size:0.65rem; padding:2px;" />
-                                <img id="previewImage3" style="max-width:50px; max-height:50px; display:none; border:1px solid #ddd; border-radius:4px; align-self:center;" />
-                            </div>
-                        </div>
-                    </td>
+                   <td colspan="3">
+    <div style="display:flex; flex-direction:row; gap:6px; align-items:flex-start;">
+        <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+            <input type="file" accept="image/*" class="form-control form-control-sm" id="inputImage1" onchange="handleProductImage(this, 'previewImage1')" style="font-size:0.65rem; padding:2px;" />
+            <div class="img-wrap">
+                <img id="previewImage1" style="max-width:50px; max-height:50px; display:none; border:1px solid #ddd; border-radius:4px;" />
+                <button type="button" class="img-x" onclick="removeProductImage(1)" title="حذف الصورة">&times;</button>
+            </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+            <input type="file" accept="image/*" class="form-control form-control-sm" id="inputImage2" onchange="handleProductImage(this, 'previewImage2')" style="font-size:0.65rem; padding:2px;" />
+            <div class="img-wrap">
+                <img id="previewImage2" style="max-width:50px; max-height:50px; display:none; border:1px solid #ddd; border-radius:4px;" />
+                <button type="button" class="img-x" onclick="removeProductImage(2)" title="حذف الصورة">&times;</button>
+            </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
+            <input type="file" accept="image/*" class="form-control form-control-sm" id="inputImage3" onchange="handleProductImage(this, 'previewImage3')" style="font-size:0.65rem; padding:2px;" />
+            <div class="img-wrap">
+                <img id="previewImage3" style="max-width:50px; max-height:50px; display:none; border:1px solid #ddd; border-radius:4px;" />
+                <button type="button" class="img-x" onclick="removeProductImage(3)" title="حذف الصورة">&times;</button>
+            </div>
+        </div>
+    </div>
+</td>
                     <td><button class="btn btn-primary btn-sm w-100 add-row-btn" id="addProductBtn"><i class="fas fa-plus"></i></button></td>
                 `;
                 tbody.appendChild(inputRow);
@@ -3663,100 +3700,114 @@ window.onload=function(){
             document.getElementById('totalValue').textContent = totalValue.toFixed(2);
         }
 
-        function handleProductImage(input, previewId) {
-            const file = input.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                showToast('⚠️ الرجاء اختيار صورة صالحة', 'warning');
-                input.value = '';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const maxDim = 800;
-                    let w = img.width, h = img.height;
-                    if (w > h) { 
-                        if (w > maxDim) { 
-                            h = Math.round(h * maxDim / w); 
-                            w = maxDim; 
-                        } 
-                    } else { 
-                        if (h > maxDim) { 
-                            w = Math.round(w * maxDim / h); 
-                            h = maxDim; 
-                        } 
-                    }
+       const PRODUCT_IMAGE_MAX_CHARS = 45000; // حد خلية Google Sheets ~50000
 
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w; 
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, w, h);
-                    
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    
-                    ctx.drawImage(img, 0, 0, w, h);
+function loadImageFromSrc(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('تعذر قراءة الصورة'));
+        img.src = src;
+    });
+}
 
-                    let quality = 0.85;
-                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
-                    
-                    let attempts = 0;
-                    while (dataUrl.length > 200000 && quality > 0.5 && attempts < 10) {
-                        quality -= 0.05;
-                        dataUrl = canvas.toDataURL('image/jpeg', quality);
-                        attempts++;
-                    }
-                    
-                    if (dataUrl.length > 300000) {
-                        showToast('⚠️ الصورة كبيرة جداً. استخدم صورة أصغر.', 'warning');
-                        input.value = '';
-                        return;
-                    }
-                    
-                    const preview = document.getElementById(previewId);
-                    if (preview) {
-                        preview.src = dataUrl;
-                        preview.style.display = 'block';
-                        preview.style.maxWidth = '80px';
-                        preview.style.maxHeight = '80px';
-                        preview.style.border = '1px solid #ddd';
-                        preview.style.borderRadius = '4px';
-                        preview.style.padding = '2px';
-                    }
-                    
-                    const hiddenId = previewId.replace('previewImage', 'imageData');
-                    let hiddenInput = document.getElementById(hiddenId);
-                    if (!hiddenInput) {
-                        hiddenInput = document.createElement('input');
-                        hiddenInput.type = 'hidden';
-                        hiddenInput.id = hiddenId;
-                        hiddenInput.name = hiddenId;
-                        input.parentNode.appendChild(hiddenInput);
-                    }
-                    hiddenInput.value = dataUrl;
-                    
-                    const sizeKB = (dataUrl.length / 1024).toFixed(1);
-                    console.log(`✅ تم ضغط الصورة: ${sizeKB} كيلوبايت (${w}x${h}) - جودة ${(quality * 100).toFixed(0)}%`);
-                    showToast(`✅ تم ضغط الصورة إلى ${sizeKB} كيلوبايت`, 'success');
-                };
-                img.onerror = function() { 
-                    showToast('❌ تعذر قراءة الصورة', 'error'); 
-                    input.value = '';
-                };
-                img.src = e.target.result;
-            };
-            reader.onerror = function() { 
-                showToast('❌ تعذر قراءة الملف', 'error'); 
-                input.value = '';
-            };
-            reader.readAsDataURL(file);
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('تعذر قراءة الملف'));
+        reader.readAsDataURL(file);
+    });
+}
+
+// يصغّر الأبعاد والجودة تدريجياً حتى يصبح الحجم ضمن الحد
+function compressImageElement(img, maxChars = PRODUCT_IMAGE_MAX_CHARS) {
+    let maxDim = 800;
+    let result = '';
+    while (maxDim >= 120) {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+
+        for (const q of [0.8, 0.7, 0.6, 0.5, 0.4]) {
+            result = canvas.toDataURL('image/jpeg', q);
+            if (result.length <= maxChars) return result;
         }
+        maxDim = Math.round(maxDim * 0.8);
+    }
+    return result;
+}
+
+// لتصغير صورة محفوظة مسبقاً إذا كانت أكبر من الحد
+async function shrinkDataUrl(dataUrl, maxChars = PRODUCT_IMAGE_MAX_CHARS) {
+    if (!dataUrl || dataUrl.length <= maxChars) return dataUrl;
+    const img = await loadImageFromSrc(dataUrl);
+    return compressImageElement(img, maxChars);
+}
+
+async function handleProductImage(input, previewId) {
+    const file = input.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        showToast('⚠️ الرجاء اختيار صورة صالحة', 'warning');
+        input.value = '';
+        return;
+    }
+
+    const loadingToast = showToast('جاري ضغط الصورة...', 'loading');
+    try {
+        const original = await readFileAsDataURL(file);
+        const img = await loadImageFromSrc(original);
+        const dataUrl = compressImageElement(img);
+
+        const preview = document.getElementById(previewId);
+        if (preview) {
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+            preview.style.maxWidth = '80px';
+            preview.style.maxHeight = '80px';
+        }
+
+        const hiddenId = previewId.replace('previewImage', 'imageData');
+        let hiddenInput = document.getElementById(hiddenId);
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = hiddenId;
+            hiddenInput.name = hiddenId;
+            input.parentNode.appendChild(hiddenInput);
+        }
+        hiddenInput.value = dataUrl;
+
+        loadingToast.remove();
+        const beforeKB = (file.size / 1024).toFixed(0);
+        const afterKB = (dataUrl.length / 1024).toFixed(1);
+        showToast(`✅ تم تصغير الصورة من ${beforeKB} إلى ${afterKB} كيلوبايت`, 'success', 2000);
+    } catch (err) {
+        loadingToast.remove();
+        console.error(err);
+        showToast('❌ ' + err.message, 'error');
+        input.value = '';
+    }
+}
+
+function removeProductImage(n) {
+    const preview = document.getElementById('previewImage' + n);
+    if (preview) { preview.removeAttribute('src'); preview.style.display = 'none'; }
+    const hidden = document.getElementById('imageData' + n);
+    if (hidden) hidden.value = '';
+    const fileInput = document.getElementById('inputImage' + n);
+    if (fileInput) fileInput.value = '';
+}
 
         function addProductFromRow() {
             const supplier = document.getElementById('inputSupplier').value.trim();
@@ -3956,25 +4007,17 @@ window.onload=function(){
             }
 
             callProductsScript('getProductImages', { id: id })
-                .then(res => {
-                    const images = res.data || res;
-
-                    if (images.ProdImage1) {
-                        const el = document.getElementById('previewImage1');
-                        if (el) { el.src = images.ProdImage1; el.style.display = 'block'; }
-                        setHiddenImageValue('imageData1', images.ProdImage1);
-                    }
-                    if (images.ProdImage2) {
-                        const el = document.getElementById('previewImage2');
-                        if (el) { el.src = images.ProdImage2; el.style.display = 'block'; }
-                        setHiddenImageValue('imageData2', images.ProdImage2);
-                    }
-                    if (images.ProdImage3) {
-                        const el = document.getElementById('previewImage3');
-                        if (el) { el.src = images.ProdImage3; el.style.display = 'block'; }
-                        setHiddenImageValue('imageData3', images.ProdImage3);
-                    }
-                })
+                .then(async res => {
+    const images = res.data || res;
+    for (const n of [1, 2, 3]) {
+        let src = images['ProdImage' + n];
+        if (!src) continue;
+        src = await shrinkDataUrl(src);
+        const el = document.getElementById('previewImage' + n);
+        if (el) { el.src = src; el.style.display = 'block'; }
+        setHiddenImageValue('imageData' + n, src);
+    }
+})
                 .catch(err => {
                     console.warn('⚠️ تعذر جلب صور المنتج للتعديل:', err.message);
                     showToast('⚠️ تعذر جلب صور المنتج، قد تُفقد الصور إذا حفظت الآن', 'warning');
@@ -6521,6 +6564,7 @@ if (scannerModalEl) {
                 document.getElementById('mainApp').classList.remove('show');
                 document.getElementById('loginScreen').classList.add('show');
                 document.getElementById('loginForm').reset();
+                restoreSavedPhone();
                 document.getElementById('loginError').classList.remove('show');
                 document.querySelectorAll('.nav-tabs .nav-link').forEach(tab => tab.classList.remove('hidden-tab'));
                 document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('hidden-pane'));
@@ -6950,21 +6994,22 @@ function printBill(billNo) {
         showToast('⚠️ الفاتورة غير موجودة', 'warning');
         return;
     }
- 
+
     const logoImage = document.getElementById('compLogoPreview')?.src || '';
     const footerStamp = document.getElementById('compFooterPreview')?.src || '';
     const companyName = companyData.name || 'السوبر ماركت';
     const companyTaxNumber = document.getElementById('compNO')?.value || '';
     const companyPhone = document.getElementById('compPhone')?.value || '';
-    const companyLocation = document.getElementById('compLocationSearch')?.value || '';
- 
-    const products    = (bill.BillProducts || '').split(',').filter(x => x.trim());
-    const quantities  = (bill.BillQNT || '').split(',').filter(x => x.trim());
-    const prices      = (bill.BillPrice || '').split(',').filter(x => x.trim());
-    const amounts     = (bill.BillPxQ || '').split(',').filter(x => x.trim());
-    const vats        = (bill.BillVat || '').split(',').filter(x => x.trim());
-    const barcodes    = (bill.BillBarcode || '').split(',').filter(x => x.trim());
- 
+    const companyLocation = document.getElementById('compLocationSearch')?.value
+                          || document.getElementById('compLocationLink')?.value || '';
+
+    const products   = (bill.BillProducts || '').split(',').filter(x => x.trim());
+    const quantities = (bill.BillQNT || '').split(',').filter(x => x.trim());
+    const prices     = (bill.BillPrice || '').split(',').filter(x => x.trim());
+    const amounts    = (bill.BillPxQ || '').split(',').filter(x => x.trim());
+    const vats       = (bill.BillVat || '').split(',').filter(x => x.trim());
+    const barcodes   = (bill.BillBarcode || '').split(',').filter(x => x.trim());
+
     let productsHtml = '';
     const maxLen = Math.max(products.length, quantities.length, prices.length, amounts.length, vats.length);
     for (let i = 0; i < maxLen; i++) {
@@ -6972,100 +7017,181 @@ function printBill(billNo) {
         const price  = parseFloat(prices[i] || 0);
         const amount = parseFloat(amounts[i] || 0);
         const vat    = parseFloat(vats[i] || 0);
-        productsHtml += `<tr>
-            <td style="border:1px solid #333;padding:6px;text-align:center;">${i + 1}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:center;">${barcodes[i] || '-'}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:right;">${products[i] || '-'}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:center;">${qty}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:center;">${price.toFixed(3)}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:center;">${amount.toFixed(3)}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:center;">${vat.toFixed(3)}</td>
-            <td style="border:1px solid #333;padding:6px;text-align:center;font-weight:bold;">${(amount + vat).toFixed(3)}</td>
-        </tr>`;
+        const total  = amount + vat;
+
+        productsHtml += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${barcodes[i] || '-'}</td>
+                <td style="text-align:right;">${products[i] || '-'}</td>
+                <td>${qty}</td>
+                <td>${price.toFixed(3)}</td>
+                <td>${amount.toFixed(3)}</td>
+                <td>${vat.toFixed(3)}</td>
+                <td style="font-weight:bold; color:#1e2a5a;">${total.toFixed(3)}</td>
+            </tr>`;
     }
- 
-    // حالة الدفع: غير مدفوع - مدفوع جزئي - مدفوع كامل
+
+    const totalFinal = bill.BillTotalDelivery || 0;
+    const paidAmount = bill.BillAdvance || 0;
+    const balanceAmount = bill.BillBalance !== undefined ? bill.BillBalance : (totalFinal - paidAmount);
+
     const stInfo = getBillStatusInfo(bill.BillStatue);
-    let statusText = stInfo.text, statusColor = stInfo.color;
- 
+    const statusText = stInfo.text, statusColor = stInfo.color;
+
     const paymentMethods = {
         'Cash': '💵 كاش', 'Visa': '💳 فيزا', 'BankT': '🏦 تحويل بنكي',
         'Check': '📝 شيك', 'Debtor': '📋 آجل', 'Other': '🔄 أخرى'
     };
     const paymentText = paymentMethods[bill.BillWay] || bill.BillWay || '-';
- 
-    const printContent = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-    <title>فاتورة ${bill.BillNo}</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:Tahoma,Arial,sans-serif; padding:15px; direction:rtl; }
-        .header { text-align:center; border-bottom:2px solid #1e2a5a; padding-bottom:10px; margin-bottom:15px; }
-        .header img { max-width:100px; max-height:100px; }
-        .header h2 { color:#1e2a5a; margin:8px 0; }
-        .header p { color:#666; font-size:12px; }
-        .info { background:#f0f4ff; padding:10px; border-radius:8px; border-right:4px solid #1e2a5a; margin-bottom:12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; font-size:13px; }
-        table { width:100%; border-collapse:collapse; margin-bottom:12px; }
-        th { background:#1e2a5a; color:white; padding:8px; font-size:12px; }
-        .summary { background:#f8f9fa; padding:12px; border-radius:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; font-size:13px; }
-        .summary-item { text-align:center; padding:6px; }
-        .summary-item small { display:block; color:#666; margin-bottom:3px; }
-        .summary-item strong { color:#1e2a5a; }
-        .footer { border-top:2px solid #1e2a5a; padding-top:10px; text-align:center; }
-        .footer img { max-width:100px; max-height:70px; }
-        @media print { body { padding:0; } .no-print { display:none !important; } }
-        @page { size:A4; margin:8mm; }
-    </style></head><body>
-        <div class="header">
-            ${logoImage ? `<img src="${logoImage}" />` : ''}
-            <h2>${companyName}</h2>
-            <p>
-                ${companyTaxNumber ? 'الرقم الضريبي: ' + companyTaxNumber + ' | ' : ''}
-                ${companyPhone ? 'الهاتف: ' + companyPhone : ''}
-                ${companyLocation ? ' | ' + companyLocation : ''}
-            </p>
-        </div>
-        <div class="info">
-            <div><strong>رقم الفاتورة:</strong> ${bill.BillNo}</div>
-            <div><strong>التاريخ:</strong> ${bill.BillDate}</div>
-            <div><strong>الهاتف:</strong> ${bill.BillPhone}</div>
-            <div><strong>العميل:</strong> ${bill.BillCustomer || '-'}</div>
-            <div><strong>الموقع:</strong> ${bill.BillLocation || '-'}</div>
-            <div><strong>طريقة الدفع:</strong> ${paymentText}</div>
-        </div>
-        <table>
-            <thead><tr>
-                <th>#</th><th>الباركود</th><th style="text-align:right;">المنتج</th>
-                <th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>الضريبة</th><th>المجموع</th>
-            </tr></thead>
-            <tbody>${productsHtml}</tbody>
-        </table>
-        <div class="summary">
-            <div class="summary-item"><small>إجمالي السعر</small><strong>${bill.BillTotPxQ.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>إجمالي الضريبة</small><strong>${bill.BillTotVat.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>المجموع + الضريبة</small><strong>${bill.BillTotAMvVAT.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>التخفيض</small><strong style="color:#dc3545;">${bill.BillTotDiscount.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>بعد التخفيض</small><strong style="color:#28a745;">${bill.BillTotAMvDIS.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>الكمية الكلية</small><strong>${bill.BillTotQNT || 0}</strong></div>
-            <div class="summary-item"><small>التوصيل</small><strong>${bill.BillDelivery.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>الإجمالي النهائي</small><strong style="color:#1e2a5a; font-size:16px;">${bill.BillTotalDelivery.toFixed(3)} ر.ع</strong></div>
-            <div class="summary-item"><small>المدفوع</small><strong style="color:#28a745;">${bill.BillAdvance.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>الباقي</small><strong style="color:${bill.BillBalance <= 0 ? '#28a745' : '#dc3545'};">${bill.BillBalance.toFixed(3)}</strong></div>
-            <div class="summary-item"><small>طريقة الدفع</small><strong>${paymentText}</strong></div>
-            <div class="summary-item"><small>حالة الدفع</small><strong style="color:${statusColor};">${statusText}</strong></div>
-        </div>
-        <div class="footer">
-            ${footerStamp ? `<img src="${footerStamp}" />` : ''}
-            <p style="font-size:12px; color:#666; margin-top:5px;">شكراً لتعاملكم معنا 🌟</p>
-        </div>
-        <div style="text-align:center; margin-top:15px;" class="no-print">
-            <button onclick="window.print()" style="padding:8px 24px; background:#1e2a5a; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; margin-left:10px;">🖨️ طباعة</button>
-            <button onclick="window.close()" style="padding:8px 24px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">✕ إغلاق</button>
-        </div>
-        <script>
-            window.onload = function() { setTimeout(function() { window.print(); }, 500); };
-        <\/script>
-    </body></html>`;
- 
+
+    const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>فاتورة ${bill.BillNo}</title>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                * { margin:0; padding:0; box-sizing:border-box; }
+                body { font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif; background:white; direction:rtl; padding:0; }
+                .invoice-wrapper { max-width:210mm; margin:0 auto; background:white; padding:15px 20px 10px 20px; min-height:100vh; display:flex; flex-direction:column; }
+                .invoice-header { text-align:center; padding:0 0 10px 0; border-bottom:2px solid #1e2a5a; margin-bottom:12px; }
+                .header-logo { max-width:110px; max-height:110px; object-fit:contain; display:block; margin:0 auto 8px auto; border-radius:8px; }
+                .company-name-header { font-size:22px; font-weight:bold; color:#1e2a5a; margin-bottom:4px; }
+                .company-details { font-size:12px; color:#555; display:flex; flex-wrap:wrap; justify-content:center; gap:10px 20px; margin-top:4px; }
+                .company-details .label { color:#888; }
+                .invoice-info { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px; padding:10px 15px; background:#f0f4ff; border-radius:8px; border-right:4px solid #1e2a5a; }
+                .info-item { display:flex; flex-direction:column; align-items:center; text-align:center; }
+                .info-item .label { font-size:11px; color:#6c757d; font-weight:bold; }
+                .info-item .value { font-size:14px; font-weight:bold; color:#1e2a5a; margin-top:2px; }
+                .customer-info { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; padding:8px 15px; background:#f8f9fa; border-radius:6px; margin-bottom:12px; border:1px solid #dee2e6; font-size:13px; }
+                .customer-info .customer-label { color:#6c757d; font-weight:bold; }
+                .customer-info .customer-value { color:#1e2a5a; font-weight:500; }
+                .products-table { width:100%; border-collapse:collapse; margin:8px 0 12px 0; font-size:12px; }
+                .products-table th { background:#1e2a5a; color:white; padding:8px 4px; border:1px solid #1e2a5a; text-align:center; font-size:11px; }
+                .products-table td { border:1px solid #333; padding:6px 4px; text-align:center; font-size:11px; }
+                .products-table tr:nth-child(even) { background:#f8f9fa; }
+                .summary-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:8px 0 12px 0; padding:12px 15px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6; }
+                .summary-item { display:flex; flex-direction:column; align-items:center; padding:5px 0; }
+                .summary-item .label { font-size:10px; color:#6c757d; font-weight:bold; }
+                .summary-item .value { font-size:14px; font-weight:bold; color:#1e2a5a; margin-top:2px; }
+                .invoice-footer { margin-top:auto; padding-top:12px; border-top:2px solid #1e2a5a; display:flex; justify-content:space-between; align-items:center; gap:15px; }
+                .footer-left { display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; }
+                .footer-barcode-box { text-align:center; background:white; padding:5px 10px; border:1px dashed #999; border-radius:6px; }
+                .footer-barcode-box svg { display:block; margin:0 auto; }
+                .footer-barcode-label { font-size:10px; color:#666; margin-top:3px; direction:ltr; }
+                .footer-text { text-align:center; font-size:11px; color:#666; margin-top:5px; }
+                .footer-stamp { display:flex; flex-direction:column; align-items:center; }
+                .footer-stamp img { max-width:100px; max-height:70px; object-fit:contain; margin-bottom:4px; }
+                .footer-stamp .stamp-label { font-size:12px; font-weight:bold; color:#1e2a5a; }
+                .footer-stamp .stamp-line { font-size:11px; color:#999; }
+                .controls { text-align:center; margin:10px 0; }
+                .controls button { padding:8px 24px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; margin:0 5px; color:white; }
+                @media print { body { padding:0; } .invoice-wrapper { padding:8px 12px 5px 12px; } .no-print { display:none !important; } }
+                @page { size:A4; margin:8mm 6mm; }
+            </style>
+        </head>
+        <body>
+            <div class="invoice-wrapper">
+                <div class="invoice-header">
+                    ${logoImage ? `<img src="${logoImage}" class="header-logo" alt="Logo" />` : ''}
+                    <div class="company-name-header">${companyName}</div>
+                    <div class="company-details">
+                        ${companyTaxNumber ? `<span><span class="label">الرقم الضريبي:</span> ${companyTaxNumber}</span>` : ''}
+                        ${companyPhone ? `<span><span class="label">الهاتف:</span> ${companyPhone}</span>` : ''}
+                        ${companyLocation ? `<span><span class="label">الموقع:</span> ${companyLocation}</span>` : ''}
+                    </div>
+                </div>
+                <div class="invoice-info">
+                    <div class="info-item">
+                        <span class="label">رقم الفاتورة</span>
+                        <span class="value">${bill.BillNo}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">رقم الطلب</span>
+                        <span class="value">${bill.OrderID || '-'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">التاريخ</span>
+                        <span class="value">${formatOrderDate(bill.BillDate)}</span>
+                    </div>
+                </div>
+                <div class="customer-info">
+                    <div><span class="customer-label">👤 العميل:</span> <span class="customer-value">${bill.BillCustomer || bill.BillPhone || 'غير معرف'}</span></div>
+                    <div><span class="customer-label">📱 الهاتف:</span> <span class="customer-value">${bill.BillPhone || '-'}</span></div>
+                    <div><span class="customer-label">🪪 رقم البطاقة:</span> <span class="customer-value">${bill.BillCustomerID || '-'}</span></div>
+                    <div><span class="customer-label">🧾 الكاشير:</span> <span class="customer-value">${bill.BillCashair || '-'}</span></div>
+                    <div style="grid-column:span 2;"><span class="customer-label">📍 الموقع:</span> <span class="customer-value">${bill.BillLocation || '-'}</span></div>
+                </div>
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">#</th>
+                            <th style="width:80px;">الباركود</th>
+                            <th style="text-align:right;">المنتج</th>
+                            <th style="width:50px;">الكمية</th>
+                            <th style="width:70px;">السعر</th>
+                            <th style="width:80px;">الإجمالي</th>
+                            <th style="width:70px;">الضريبة</th>
+                            <th style="width:85px;">المجموع</th>
+                        </tr>
+                    </thead>
+                    <tbody>${productsHtml}</tbody>
+                </table>
+                <div class="summary-grid">
+                    <div class="summary-item"><span class="label">الكمية الكلية</span><span class="value">${bill.BillTotQNT || 0}</span></div>
+                    <div class="summary-item"><span class="label">إجمالي السعر</span><span class="value">${bill.BillTotPxQ.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">إجمالي الضريبة</span><span class="value">${bill.BillTotVat.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">المجموع + الضريبة</span><span class="value">${bill.BillTotAMvVAT.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">التخفيض</span><span class="value" style="color:#dc3545;">${bill.BillTotDiscount.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">بعد التخفيض</span><span class="value" style="color:#28a745;">${bill.BillTotAMvDIS.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">التوصيل</span><span class="value">${bill.BillDelivery.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label" style="color:black;">الإجمالي النهائي</span><span class="value" style="color:black; font-size:16px;">${totalFinal.toFixed(3)} ر.ع</span></div>
+                    <div class="summary-item"><span class="label">المدفوع</span><span class="value" style="color:#28a745;">${paidAmount.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">الباقي</span><span class="value" style="color:${balanceAmount <= 0 ? '#28a745' : '#dc3545'};">${balanceAmount.toFixed(3)}</span></div>
+                    <div class="summary-item"><span class="label">طريقة الدفع</span><span class="value">${paymentText}</span></div>
+                    <div class="summary-item"><span class="label">حالة الدفع</span><span class="value" style="color:${statusColor};">${statusText}</span></div>
+                </div>
+                <div class="invoice-footer">
+                    <div class="footer-left">
+                        <div class="footer-barcode-box">
+                            <svg id="billBarcode"></svg>
+                            <div class="footer-barcode-label">${bill.BillNo}</div>
+                        </div>
+                        <div class="footer-text">شكراً لتعاملكم معنا 🌟</div>
+                    </div>
+                    <div class="footer-stamp">
+                        ${footerStamp ? `<img src="${footerStamp}" />` : ''}
+                        <div class="stamp-label">📌 ختم الشركة</div>
+                        <div class="stamp-line">....................</div>
+                    </div>
+                </div>
+                <div class="controls no-print">
+                    <button onclick="window.print()" style="background:#1e2a5a;">🖨️ طباعة</button>
+                    <button onclick="window.close()" style="background:#dc3545;">✕ إغلاق</button>
+                </div>
+            </div>
+            <script>
+                window.onload = function() {
+                    try {
+                        JsBarcode("#billBarcode", "${String(bill.BillNo).replace(/"/g, '')}", {
+                            format: "CODE128",
+                            width: 1.5,
+                            height: 45,
+                            displayValue: false,
+                            margin: 0
+                        });
+                    } catch(e) {
+                        console.error('Barcode error:', e);
+                    }
+                    setTimeout(function() { window.print(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `;
+
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     if (printWindow) {
         printWindow.document.write(printContent);
