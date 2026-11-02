@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متجر المنتجات</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style>
+<title>YAQEEN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3c72">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -1436,6 +1444,32 @@
     border: none; border-radius: 40px; font-size: 1rem; font-weight: 600; cursor: pointer;
 }
 .permission-box button:hover { background: #0056b3; }
+
+
+/* ===== زر تثبيت التطبيق (أسفل النافذة) ===== */
+#installBar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 2000;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(135deg, #0f2027, #2c5364);
+  box-shadow: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #fff;
+}
+body.has-install-bar #bookConfirmBar { bottom: 62px; }
+#installBar.show { display: flex; }
+#installBar .install-text { font-size: 13px; font-weight: 600; }
+#installBar .install-btn {
+  background: linear-gradient(135deg, #047413, #099c1c);
+  color: #000; border: none; border-radius: 10px;
+  padding: 9px 18px; font-weight: 700; cursor: pointer;
+  font-family: 'Cairo', sans-serif; font-size: 14px;
+}
+body.has-install-bar { padding-bottom: 80px; }
     </style>
 </head>
 <body>
@@ -1630,7 +1664,11 @@
 </div>
 
 
-
+<!-- ============ شريط تثبيت التطبيق ============ -->
+<div id="installBar">
+  <span class="install-text" id="installText"></span>
+  <button class="install-btn" id="installBtn">تثبيت التطبيق📲</button>
+</div>
 <script>
 (function() {
     'use strict';
@@ -1641,7 +1679,7 @@
     const COMPANY_API_URL  = 'https://script.google.com/macros/s/AKfycbxUnfrfhkiN6A1xtbsPrGbCXPi6w6UIX9oWQzWyRXmclQTI53bkcvyvpsURhUT9Gii2Wg/exec';
     const LOCATIONS_API_URL = 'https://script.google.com/macros/s/AKfycbw4OHEascNN4hsQttc_0UmibKZgBAawGNgeEuzHI03zadX0kJw8k4lfCX7hvTLYKysw/exec';
     const SECTIONS_API_URL = 'https://script.google.com/macros/s/AKfycbx8qOTpDUc7-JXQUgyAlJQCaJj0dIx6TWkI3YedeYbeImHlRFU5nCivENX-YNQn7LnO3w/exec';
-    const ORDERS_API_URL   = 'https://script.google.com/macros/s/AKfycbx2xhZqcDoNS_kt68GKifMeKvr4yptVtHx3Wg06r6olOyuaxXMBU_oIy6Qb94gprZtv/exec';
+    const ORDERS_API_URL   = 'https://script.google.com/macros/s/AKfycbyJinIfq7sZfkqMTVBEA6NItQeR7XX2vJZJCrIdHpJYDyWD20muoMNIhMXhhXG50stjSQ/exec';
     const USERS_API_URL = 'https://script.google.com/macros/s/AKfycbylcnRkyjAS455D20cpcpnN1HLOkjrHuCFpkCYJOfsVL6pymzPB_fcroTKV1Rj9yHIB-A/exec';
     const ADMIN_PAGE_URL = 'index2.html';
 
@@ -3292,7 +3330,63 @@ function applyGridCols(cols) {
     productsGrid.setAttribute('data-cols', cols);
 }
 
+
+
+
+/* ============================================================
+   تثبيت التطبيق (PWA)
+   ============================================================ */
+let deferredInstallPrompt = null;
+
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+function showInstallBar() {
+  if (isStandalone()) return;
+  document.getElementById('installBar').classList.add('show');
+  document.body.classList.add('has-install-bar');
+}
+
+function hideInstallBar() {
+  document.getElementById('installBar').classList.remove('show');
+  document.body.classList.remove('has-install-bar');
+}
+
+// أندرويد / كروم / إيدج
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  showInstallBar();
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    hideInstallBar(false);
+  } else if (isIOS()) {
+    alert('لتثبيت التطبيق على الآيفون:\nاضغط زر المشاركة ⬆️ في سفاري\nثم اختر "إضافة إلى الشاشة الرئيسية"');
+  }
+});
+
+window.addEventListener('appinstalled', () => hideInstallBar(false));
+
+// آيفون: لا يوجد beforeinstallprompt، فنعرض الشريط يدوياً
+if (isIOS() && !isStandalone()) {
+  document.getElementById('installText').textContent = '📲 للتثبيت: مشاركة ⬆️ ← إضافة إلى الشاشة الرئيسية';
+  document.getElementById('installBtn').textContent = 'كيف؟';
+  setTimeout(showInstallBar, 2500);
+}
+
+// تسجيل الـ Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW error:', err));
+  });
+}
 </script>
 </body>
 </html>
-
