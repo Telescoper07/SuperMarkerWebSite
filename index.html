@@ -3261,10 +3261,18 @@ async function initApp() {
 }
 
 async function loadStoreData() {
+    // ✅ إظهار أيقونة التحميل حتى يتم جلب المنتجات
+    showLoadingScreen('جاري تحميل المنتجات...');
+
     try {
         await fetchProducts();
     } catch (err) {
         console.error('خطأ في جلب المنتجات:', err);
+        // ✅ إعادة المحاولة في الخلفية إذا فشل الجلب
+        retryUntilSuccess(() => fetchProducts(true), 'المنتجات', 5000);
+    } finally {
+        // ✅ إخفاء أيقونة التحميل (عند النجاح أو بعد أول فشل)
+        hideLoadingScreen();
     }
 
     try {
