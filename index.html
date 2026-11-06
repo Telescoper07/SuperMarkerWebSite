@@ -1675,7 +1675,7 @@ body.has-install-bar { padding-bottom: 80px; }
 
     // ========== إعدادات API ==========
     // ⚠️ استبدل هذه الروابط بروابطك الفعلية
-    const PRODUCTS_API_URL = 'https://script.google.com/macros/s/AKfycbzfnNSfoDdUcR12T07weFEEhzFAmsdiu65yBiR9Qcrpoo113qOALhJPRz45YxYctYGQfA/exec';
+    const PRODUCTS_API_URL = 'https://script.google.com/macros/s/AKfycbysZa8V_m2NK1PEQ2Urg6R-QlzfpNVOVxD7C3N9VD3P6SVBg-RIxRZkeXJTsLPy-0uKaQ/exec';
     const COMPANY_API_URL  = 'https://script.google.com/macros/s/AKfycbxUnfrfhkiN6A1xtbsPrGbCXPi6w6UIX9oWQzWyRXmclQTI53bkcvyvpsURhUT9Gii2Wg/exec';
     const LOCATIONS_API_URL = 'https://script.google.com/macros/s/AKfycbw4OHEascNN4hsQttc_0UmibKZgBAawGNgeEuzHI03zadX0kJw8k4lfCX7hvTLYKysw/exec';
     const SECTIONS_API_URL = 'https://script.google.com/macros/s/AKfycbx8qOTpDUc7-JXQUgyAlJQCaJj0dIx6TWkI3YedeYbeImHlRFU5nCivENX-YNQn7LnO3w/exec';
@@ -1696,7 +1696,10 @@ body.has-install-bar { padding-bottom: 80px; }
     let wishlist = new Set();
     let currentImageIndex = 0;
     let currentImageProduct = null;
-   
+   const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="#e9ecef"/></svg>'
+);
+let mainImagesLoading = false;
     
     let companyData = {
         name: 'متجر المنتجات',
@@ -1923,35 +1926,64 @@ function updateUIWithCompanyData(comp) {
 
 
 
-    // ========== جلب المنتجات ==========
- async function fetchProducts(silent = false) {
+   const BATCH_SIZE = 200;
+
+function parseProductsResponse(result) {
+    if (Array.isArray(result)) return { data: result, hasMore: false, nextOffset: 0 };
+    if (result && result.status === 'success' && Array.isArray(result.data)) return result;
+    throw new Error((result && result.message) || 'رد غير صالح');
+}
+
+function mapProduct(p) {
+    const priceOld = parseFloat(p.priceOld) || 0;
+    const priceNew = parseFloat(p.priceNew) || priceOld;
+    const discountPercent = parseFloat(p.discount) ||
+        (priceOld > 0 && priceNew < priceOld ? Math.round((priceOld - priceNew) / priceOld * 100) : 0);
+    const stock = parseFloat(p.available) || parseFloat(p.Stock) || 0;
+    const vatPercent = parseFloat(p['Vat%']) || 0;
+    const vatPrice = parseFloat(p.VatPrice) || 0;
+
+    return {
+        ...p,
+        id: String(p.id || '').trim(),
+        name: p.name || '',
+        section: p.section || '',
+        priceOld: priceOld,
+        priceNew: priceNew,
+        discount: discountPercent,
+        available: stock,
+        mainImage: p.mainImage || '',
+        thumbnails: [p.image2, p.image3].filter(i => i && String(i).trim()),
+        VatPercent: vatPercent,
+        VatPrice: vatPrice,
+
+        // حقول بأسمائها القديمة لأن بقية الصفحة تستخدمها
+        ProductID: String(p.id || '').trim(),
+        ProdName: p.name || '',
+        ProdSection: p.section || '',
+        ProdSupplier: p.supplier || '',
+        ProdBarcode: String(p.barcode || '').trim(),
+        ProdStock: stock,
+        ProdAvailable: stock,
+        ProdPrice: priceOld,
+        'ProdVat%': vatPercent,
+        ProdVatP: vatPrice,
+        ProdDiscountPercent: discountPercent,
+        ProdTotalAfterDiscount: priceNew
+    };
+}
+
+async function fetchBatch(offset) {
+    const res = await fetch(`${PRODUCTS_API_URL}?action=getProducts&offset=${offset}&limit=${BATCH_SIZE}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return parseProductsResponse(await res.json());
+}
+
+// ===== الدفعة الأولى (مع أيقونة اللودنج) =====
+async function fetchProducts(silent = false) {
     try {
-        console.log('🔄 جلب المنتجات من:', PRODUCTS_API_URL);
-
-        const res = await fetch(`${PRODUCTS_API_URL}?action=getProducts`);
-        console.log('📥 حالة الاستجابة:', res.status);
-
-        if (!res.ok) {
-            throw new Error(`HTTP error ${res.status}`);
-        }
-
-        const result = await res.json();
-        console.log('📦 البيانات الخام:', result);
-
-        // ===== معالجة مرنة للاستجابة =====
-        let productsArray = null;
-        if (Array.isArray(result)) {
-            productsArray = result;
-        } else if (result.status === 'success' && result.data) {
-            productsArray = result.data;
-        } else if (result.data && Array.isArray(result.data)) {
-            productsArray = result.data;
-        } else if (result.products && Array.isArray(result.products)) {
-            productsArray = result.products;
-        }
-
-        if (!productsArray || productsArray.length === 0) {
-            console.warn('⚠️ لا توجد منتجات');
+        const first = await fetchBatch(0);
+        if (!first.data.length && !first.hasMore) {
             if (!silent) {
                 document.getElementById('productsGrid').innerHTML =
                     '<p style="text-align:center;padding:30px;color:#6c757d;">لا توجد منتجات متاحة حالياً</p>';
@@ -1959,88 +1991,7 @@ function updateUIWithCompanyData(comp) {
             throw new Error('لا توجد منتجات');
         }
 
-        // ============================================================
-        // ✅✅✅ جلب كامل البيانات — كل حقل من Google Sheets كما هو
-        // ============================================================
-        productsData = productsArray.map(p => {
-
-            // ===== نسخة كاملة من كل الحقول الأصلية =====
-            const fullData = { ...p };
-
-            // ===== الحقول المحسوبة (بأسماء متعددة محتملة) =====
-            const priceOld = parseFloat(
-                p.ProdPrice ?? p.priceOld ?? p.Price ?? 0
-            ) || 0;
-
-            const discountPercent = parseFloat(
-                p.ProdDiscountPercent ?? p.DiscountPercent ?? 
-                p.discount ?? p.Discount ?? 0
-            ) || 0;
-
-            const totalAfterDiscount = parseFloat(
-                p.ProdTotalAfterDiscount ?? p.TotalAfterDiscount ?? 
-                p.priceNew ?? p.PriceAfterDiscount ?? 0
-            ) || (priceOld * (1 - discountPercent / 100));
-
-            // ===== إرجاع كامل البيانات + الحقول المساعدة =====
-            return {
-                // ✅ 1) كل الحقول الأصلية من Google Sheets
-                ...fullData,
-
-                // ✅ 2) الحقول المساعدة (لا تحذف الأصلية)
-                id: String(p.id || p.ProductID || '').trim(),
-                name: p.name || p.ProdName || '',
-                section: p.section || p.ProdSection || '',
-                priceOld: priceOld,
-                priceNew: parseFloat(totalAfterDiscount.toFixed(3)),
-                discount: discountPercent,
-                available: parseFloat(p.ProdStock) || parseFloat(p.Stock || p.stock) || 0,
-                mainImage: p.mainImage || p.ProdImage1 || '',
-                thumbnails: [
-                    p.image2 || p.ProdImage2,
-                    p.image3 || p.ProdImage3
-                ].filter(i => i && String(i).trim()),
-                VatPercent: parseFloat(p['Vat%'] || p['ProdVat%']) || 0,
-                VatPrice: parseFloat(p.VatPrice || p.ProdVatP) || 0,
-
-                // ✅ 3) ضمان وجود الحقول الأساسية بأسمائها الأصلية
-                ProductID: String(p.ProductID || p.id || '').trim(),
-                ProdName: p.ProdName || p.name || '',
-                ProdSection: p.ProdSection || p.section || '',
-                ProdBarcode: String(p.ProdBarcode || p.barcode || '').trim(),
-                ProdSupplier: p.ProdSupplier || '',
-                ProdAvailable: parseFloat(p.ProdAvailable) || 0,
-                ProdLastAdd: parseFloat(p.ProdLastAdd) || 0,
-                ProdStock: parseFloat(p.ProdStock) || 0,
-                ProdSpent: parseFloat(p.ProdSpent) || 0,
-                ProdPrice: priceOld,
-                'ProdVat%': parseFloat(p['ProdVat%']) || 0,
-                ProdVatP: parseFloat(p.ProdVatP) || 0,
-                'ProdPrice&vat': parseFloat(p['ProdPrice&vat']) || 0,
-                ProdTotalSales: parseFloat(p.ProdTotalSales) || 0,
-                ProdSales: parseFloat(p.ProdSales) || 0,
-                ProdBenefits: parseFloat(p.ProdBenefits) || 0,
-                ProdDiscountPercent: discountPercent,
-                ProdTotalAfterDiscount: parseFloat(totalAfterDiscount.toFixed(3))
-            };
-        });
-
-        // ===== ✅ طباعة تشخيصية =====
-        console.log('✅ عدد المنتجات:', productsData.length);
-        console.log('🔍 أسماء الحقول من Google Sheets:', Object.keys(productsArray[0]));
-        console.log('📋 أول منتج كامل:', productsData[0]);
-
-        const withDiscount = productsData.filter(p => p.discount > 0);
-        console.log(`🏷️ منتجات بها تخفيض: ${withDiscount.length} من ${productsData.length}`);
-        if (withDiscount.length > 0) {
-            console.log('💰 نموذج منتج مخفّض:', {
-                name: withDiscount[0].name,
-                ProdPrice: withDiscount[0].ProdPrice,
-                ProdDiscountPercent: withDiscount[0].ProdDiscountPercent,
-                ProdTotalAfterDiscount: withDiscount[0].ProdTotalAfterDiscount
-            });
-        }
-
+        productsData = first.data.map(mapProduct);
         filteredProducts = [...productsData];
         renderFilteredProducts();
         renderSections();
@@ -2048,21 +1999,67 @@ function updateUIWithCompanyData(comp) {
         loadWishlistFromStorage();
         syncUIWithStorage();
 
+        // ✅ باقي الدفعات في الخلفية، تتابعاً، بدون لودنج
+        if (first.hasMore) loadRemainingProducts(first.nextOffset);
         return true;
-
     } catch (err) {
         console.error('❌ فشل جلب المنتجات:', err);
-        if (!silent) {
-            document.getElementById('productsGrid').innerHTML = `
-                <div class="no-results">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <h3>جاري تحميل المنتجات...</h3>
-                    <p style="color:#6c757d;font-size:0.9rem;">سيُعاد المحاولة تلقائياً</p>
-                </div>
-            `;
-        }
-        throw err;
+        throw err;   // يُعاد المحاولة عبر retryUntilSuccess
     }
+}
+
+// ===== الدفعات التالية: كل دفعة بعد انتهاء التي قبلها =====
+let loadingMore = false;
+async function loadRemainingProducts(startOffset) {
+    if (loadingMore) return;
+    loadingMore = true;
+
+    let bar = document.getElementById('moreLoadingBar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'moreLoadingBar';
+        bar.style.cssText = 'text-align:center;padding:10px;color:#1e2a5a;font-weight:600;font-size:0.85rem;';
+        document.getElementById('productsGrid').after(bar);
+    }
+
+    let offset = startOffset;
+    let hasMore = true;
+
+    while (hasMore) {
+        bar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري تحميل المزيد... (${productsData.length})`;
+        try {
+            const batch = await fetchBatch(offset);
+            const newProducts = batch.data.map(mapProduct);
+
+            // هل المعروض الآن هو كل المنتجات (بدون بحث أو قسم)؟
+            const showingAll = filteredProducts.length === productsData.length &&
+                               !document.getElementById('searchInput').value.trim();
+
+            productsData.push(...newProducts);
+
+            if (showingAll) {
+                filteredProducts = [...productsData];
+                const grid = document.getElementById('productsGrid');
+                grid.insertAdjacentHTML('beforeend', newProducts.map(createProductCard).join(''));
+                attachEvents();
+                syncUIWithStorage();
+            }
+
+            renderSections();
+            loadCartFromStorage();
+            loadWishlistFromStorage();
+
+            offset = batch.nextOffset;
+            hasMore = batch.hasMore;
+        } catch (err) {
+            console.warn('⚠️ فشلت دفعة، إعادة المحاولة بعد 3 ثوانٍ:', err.message);
+            await new Promise(r => setTimeout(r, 3000));   // نعيد نفس الدفعة
+        }
+    }
+
+    bar.remove();
+    loadingMore = false;
+    console.log('✅ اكتمل جلب كل المنتجات:', productsData.length);
 }
    
 
@@ -2234,8 +2231,8 @@ function updateUIWithCompanyData(comp) {
     return `
         <div class="product-card" data-product-id="${id}" data-available="${product.available}">
             <div class="image-main-container">
-                <img src="${product.mainImage}" alt="${product.name}" class="main-image" 
-                     data-product-id="${id}" data-current-index="0">
+                <img src="${product.mainImage || PLACEHOLDER}" alt="${product.name}" class="main-image"
+                data-product-id="${id}" data-current-index="0">
                 ${hasDiscount ? `<span class="discount-badge">-${finalDiscountPercent}%</span>` : ''}
                 ${isOutOfStock ? `<span style="position:absolute; top:8px; left:8px; background:#6c757d; color:white; padding:4px 10px; border-radius:20px; font-size:0.8rem;">نفذ</span>` : ''}
             </div>
@@ -2286,24 +2283,107 @@ function updateUIWithCompanyData(comp) {
         e.currentTarget.classList.add('active');
     }
 
-    function handleMainImageClick(e) {
-        e.stopPropagation();
-        const id = e.currentTarget.dataset.productId;
-        const product = productsData.find(p => p.id === id);
-        if (!product) return;
-        
-        const allImages = [product.mainImage, ...product.thumbnails];
-        currentImageProduct = product;
-        currentImageIndex = parseInt(e.currentTarget.dataset.currentIndex) || 0;
-        currentImageIndex = Math.max(0, Math.min(currentImageIndex, allImages.length - 1));
-        
-        document.getElementById('fullscreenImage').src = allImages[currentImageIndex];
-        document.getElementById('imageCounter').textContent = `${currentImageIndex + 1} / ${allImages.length}`;
-        document.getElementById('prevImageBtn').disabled = currentImageIndex === 0;
-        document.getElementById('nextImageBtn').disabled = currentImageIndex === allImages.length - 1;
-        document.getElementById('fullscreenImageModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
+
+    async function loadMainImages() {
+    if (mainImagesLoading) return;
+    mainImagesLoading = true;
+
+    const todo = productsData.filter(p => p.row && !p.mainImage && !p.imgTried);
+    const BATCH = 8;
+    const batches = [];
+    for (let i = 0; i < todo.length; i += BATCH) batches.push(todo.slice(i, i + BATCH));
+
+    let next = 0;
+    async function worker() {
+        while (next < batches.length) {
+            const b = batches[next++];
+            try {
+                const res = await fetch(`${PRODUCTS_API_URL}?action=getImages&fields=ProdImage1&rows=${b.map(p => p.row).join(',')}`);
+                const json = await res.json();
+                if (json.status !== 'success') throw new Error(json.message);
+
+                b.forEach(p => {
+                    const img = json.data[p.row];
+                    const src = img && img.ProdImage1 ? String(img.ProdImage1) : '';
+                    p.mainImage = src;
+                    p.imgTried = true;
+                    if (src) {
+                        document.querySelectorAll(`.product-card[data-product-id="${p.id}"] .main-image`)
+                            .forEach(el => el.src = src);
+                    }
+                });
+            } catch (err) {
+                console.warn('⚠️ فشل جلب دفعة صور:', err.message);
+            }
+        }
     }
+
+    await Promise.all([worker(), worker()]);   // دفعتان بالتوازي
+    mainImagesLoading = false;
+}
+
+function refreshViewer() {
+    const product = currentImageProduct;
+    if (!product) return;
+    const all = [product.mainImage || PLACEHOLDER, ...product.thumbnails];
+    currentImageIndex = Math.max(0, Math.min(currentImageIndex, all.length - 1));
+    document.getElementById('fullscreenImage').src = all[currentImageIndex];
+    document.getElementById('imageCounter').textContent = `${currentImageIndex + 1} / ${all.length}`;
+    document.getElementById('prevImageBtn').disabled = currentImageIndex === 0;
+    document.getElementById('nextImageBtn').disabled = currentImageIndex === all.length - 1;
+}
+
+async function handleMainImageClick(e) {
+    e.stopPropagation();
+    const id = e.currentTarget.dataset.productId;
+    const product = productsData.find(p => p.id === id);
+    if (!product) return;
+
+    currentImageProduct = product;
+    currentImageIndex = parseInt(e.currentTarget.dataset.currentIndex) || 0;
+    refreshViewer();
+    document.getElementById('fullscreenImageModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // ✅ جلب باقي الصور عند أول ضغطة فقط
+    if (product.extraLoaded || !product.row) return;
+
+    const fields = ['ProdImage2', 'ProdImage3'];
+    if (!product.mainImage) fields.unshift('ProdImage1');
+
+    document.getElementById('imageCounter').textContent = 'جاري تحميل الصور...';
+    try {
+        const res = await fetch(`${PRODUCTS_API_URL}?action=getImages&fields=${fields.join(',')}&rows=${product.row}`);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message);
+
+        const img = json.data[product.row] || {};
+        if (img.ProdImage1) product.mainImage = img.ProdImage1;
+        product.thumbnails = [img.ProdImage2, img.ProdImage3].filter(x => x && String(x).trim());
+        product.extraLoaded = true;
+
+        // تحديث البطاقة: الصورة الرئيسية + الصور المصغّرة
+        document.querySelectorAll(`.product-card[data-product-id="${id}"]`).forEach(card => {
+            const main = card.querySelector('.main-image');
+            if (main && product.mainImage) main.src = product.mainImage;
+            card.querySelector('.thumbnail-row')?.remove();
+            if (product.thumbnails.length) {
+                const row = document.createElement('div');
+                row.className = 'thumbnail-row';
+                row.innerHTML = product.thumbnails.map((t, i) =>
+                    `<img src="${t}" class="thumbnail" data-thumb-index="${i}" data-product-id="${id}">`).join('');
+                card.querySelector('.image-main-container').after(row);
+                row.querySelectorAll('.thumbnail').forEach(t => t.onclick = handleThumbnailClick);
+            }
+        });
+
+        if (currentImageProduct === product) refreshViewer();
+    } catch (err) {
+        console.warn('⚠️ فشل جلب صور المنتج:', err.message);
+        refreshViewer();
+        showToast('تعذر تحميل باقي الصور', false);
+    }
+}
 
     function handleIncrement(e) {
         const card = e.currentTarget.closest('.product-card');
@@ -3042,7 +3122,7 @@ document.getElementById('adminIcon').onclick = function() {
 
     function navImage(dir) {
         if (!currentImageProduct) return;
-        const all = [currentImageProduct.mainImage, ...currentImageProduct.thumbnails];
+        const all = [currentImageProduct.mainImage || PLACEHOLDER, ...currentImageProduct.thumbnails];
         const newIdx = currentImageIndex + dir;
         if (newIdx < 0 || newIdx >= all.length) return;
         currentImageIndex = newIdx;
@@ -3288,7 +3368,7 @@ async function loadStoreData() {
     syncUIWithStorage();
 }
 
-// ========== بوابة الأذونات =======
+// ========== بوابة الأذونات ==========
 function showPermissionOverlay(mode, res) {
     document.getElementById('permissionOverlay').classList.add('active');
     document.body.style.overflow = 'hidden';
