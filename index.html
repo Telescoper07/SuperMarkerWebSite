@@ -1444,6 +1444,17 @@
     border: none; border-radius: 40px; font-size: 1rem; font-weight: 600; cursor: pointer;
 }
 .permission-box button:hover { background: #0056b3; }
+.login-content .logo {
+    display: block;
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: #fff;
+    padding: 8px;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
 
 
 /* ===== زر تثبيت التطبيق (أسفل النافذة) ===== */
@@ -1470,6 +1481,7 @@ body.has-install-bar #bookConfirmBar { bottom: 62px; }
   font-family: 'Cairo', sans-serif; font-size: 14px;
 }
 body.has-install-bar { padding-bottom: 80px; }
+
     </style>
 </head>
 <body>
@@ -1821,18 +1833,25 @@ function updateUIWithCompanyData(comp) {
     const loginLogo = document.getElementById('loginLogo');
     const loginName = document.getElementById('loginCompanyName');
     
-    if (loginLogo) {
-        if (comp.logo && String(comp.logo).trim().startsWith('http')) {
-            loginLogo.src = comp.logo;
-            loginLogo.style.display = 'block';
-            loginLogo.onerror = function() {
-                console.error('❌ فشل تحميل لوجو تسجيل الدخول:', this.src);
-                this.style.display = 'none';
-            };
-        } else {
-            loginLogo.style.display = 'none';
-        }
+   if (loginLogo) {
+    const logoSrc = String(comp.logo || '').trim();
+    const validLogo = logoSrc.startsWith('http') || logoSrc.startsWith('data:image');
+
+    if (validLogo) {
+        loginLogo.onerror = function () {
+            console.error('❌ فشل تحميل لوجو تسجيل الدخول:', this.src.substring(0, 80));
+            this.style.display = 'none';
+        };
+        loginLogo.src = logoSrc;
+        loginLogo.alt = comp.name;
+        loginLogo.style.display = 'block';
+
+        // نحفظه ليظهر فوراً في الزيارات القادمة
+        try { localStorage.setItem('store_company_logo', logoSrc); } catch (e) {}
+    } else {
+        loginLogo.style.display = 'none';
     }
+}
     if (loginName) loginName.textContent = comp.name;
     
     // ====== العنوان الرئيسي ======
@@ -3139,6 +3158,11 @@ document.getElementById('adminIcon').onclick = function() {
     const loginBtn = document.getElementById('loginBtn');
     const phoneInput = document.getElementById('phoneNumber');
     const savedPhone = localStorage.getItem(STORAGE_KEYS.USER_PHONE);
+    try {
+    const cachedLogo = localStorage.getItem('store_company_logo');
+    const ll = document.getElementById('loginLogo');
+    if (cachedLogo && ll) { ll.src = cachedLogo; ll.style.display = 'block'; }
+    } catch (e) {}
     
     // ===== إظهار Splash =====
     splash.classList.remove('hide');
